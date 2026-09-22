@@ -1,0 +1,23 @@
+# Archivos generados por Code::Blocks
+bin/
+obj/
+
+# Archivos de compilación
+*.o
+*.a
+*.so
+*.dll
+*.exe
+
+# Archivos temporales
+*.tmp
+*.temp
+*.bak
+
+# Archivos del IDE
+*.depend
+*.layout
+
+# Sistema operativo
+Thumbs.db
+Desktop.ini
