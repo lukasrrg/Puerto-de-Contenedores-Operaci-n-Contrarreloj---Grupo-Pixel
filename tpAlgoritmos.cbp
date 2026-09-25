@@ -31,9 +31,17 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="estructurasDeDatos.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="estructurasDeDatos.h" />
 		<Unit filename="main.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="puerto.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="puerto.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>

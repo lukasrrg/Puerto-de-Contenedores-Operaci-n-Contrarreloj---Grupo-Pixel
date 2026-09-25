@@ -10,6 +10,8 @@
 #define TAM_COD_ZONA 3
 #define TAM_MAX_NOMBRE_OPERADOR 6
 
+#define TODO_OK 0
+
 typedef struct
 {
     char codigo[TAM_COD_CONTENEDOR];
@@ -44,6 +46,12 @@ typedef struct
     int partidasJugadas;
     int maxPuntaje;
 } tOperador;
+
+
+
+
+
+
 
 
 #endif // PUERTO_H_INCLUDED
