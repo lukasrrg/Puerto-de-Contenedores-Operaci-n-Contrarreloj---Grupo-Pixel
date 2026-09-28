@@ -167,10 +167,20 @@ void crearLista(tLista *pl)
     *pl = NULL;
 }
 
-//void vaciarLista(tLista *pl)
-//{
-//
-//}
+void vaciarLista(tLista *pl)
+{
+    tNodo* elim;
+
+    while(*pl != NULL)
+    {
+        elim = *pl; // Guardamos la referencia al nodo actual
+        free(elim->dato); // Liberamos el dato reservado dinámicamente
+        free(elim); // Liberamos el nodo
+        pl = &(*pl)->sig; // Avanzamos el puntero de la lista al siguiente
+    }
+
+    return TODO_OK;
+}
 
 int listaLlena(tLista *pl)
 {

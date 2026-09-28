@@ -42,6 +42,10 @@
 			<Option compilerVar="CC" />
 		</Unit>
 		<Unit filename="puerto.h" />
+		<Unit filename="simulador.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="simulador.h" />
 		<Extensions>
 			<lib_finder disable_auto="1" />
 		</Extensions>
