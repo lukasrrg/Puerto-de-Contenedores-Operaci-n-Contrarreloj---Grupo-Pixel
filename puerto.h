@@ -12,6 +12,9 @@
 
 #define TODO_OK 0
 
+#define MUELLE_DISPONIBLE 1
+#define MUELLE_NO_DISPONIBLE 0
+
 typedef struct
 {
     char codigo[TAM_COD_CONTENEDOR];
@@ -51,8 +54,7 @@ typedef struct
 {
     int tiempoActual;
     int puntuacionProvisoria;
-    tMuelle muelles[10];
-    int cantMuelles;
+    tLista listaMuelles;
     tCola colaBuques;
     tLista listaZonas;      // Lista dinámica de Zonas (donde cada zona tiene una tPila)
     tCola colaCamiones;
@@ -62,5 +64,6 @@ typedef struct
 
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 
+void mostrarMuelle(const void *muelle);
 
 #endif // PUERTO_H_INCLUDED

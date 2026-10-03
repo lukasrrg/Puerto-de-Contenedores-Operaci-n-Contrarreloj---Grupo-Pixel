@@ -34,13 +34,18 @@ typedef struct
 //Pantallas de juego
 void pantallaInicial(int *estadoDeJuego);
 int ingresarNombreOperador(char *nombreDestino);
+void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp);
 
 //Funciones configuracion
 int obtenerValorConfiguracion(char *cadena, FILE *archivo);
 int leerArchivoConfiguracion(tConfiguracion *configuracion);
 void configuracionMostrar(tConfiguracion *config);
+void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion);
+void inicializarMuelles(tLista *listaMuelles, int cantidad);
 
 //Juego
 
+//Funciones auxiliares
+void stringMayuscula(char *str);
 
 #endif // SIMULADOR_H_INCLUDED

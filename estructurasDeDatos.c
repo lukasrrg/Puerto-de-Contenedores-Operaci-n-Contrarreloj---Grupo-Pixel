@@ -178,8 +178,6 @@ void vaciarLista(tLista *pl)
         free(elim); // Liberamos el nodo
         pl = &(*pl)->sig; // Avanzamos el puntero de la lista al siguiente
     }
-
-    return TODO_OK;
 }
 
 int listaLlena(tLista *pl)
@@ -298,6 +296,23 @@ int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void 
 
 
     *pl = nuevoNodo;
+
+    return TODO_OK;
+}
+
+int mostrarLista(const tLista *pl, void (*muestra)(const void *dato))
+{
+    const tNodo *nodoActual = *pl;
+
+    if (nodoActual == NULL)
+        return ERROR_LISTA_VACIA;
+    else
+        do
+        {
+            muestra(nodoActual->dato);
+
+            nodoActual = nodoActual->sig;
+        } while(nodoActual != NULL);
 
     return TODO_OK;
 }

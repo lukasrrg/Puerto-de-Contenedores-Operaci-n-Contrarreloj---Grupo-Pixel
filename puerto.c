@@ -17,13 +17,8 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
 
     // 1. Mostrar Muelles
     printf(" MUELLES\n");
-    for (int i = 0; i < puerto->cantMuelles; i++)
-    {
-        if (puerto->muelles[i].disponible)
-            printf("  - Muelle %s: Disponible\n", puerto->muelles[i].codigo);
-        else
-            printf("  - Muelle %s: Ocupado\n", puerto->muelles[i].codigo);
-    }
+    //Mostrar lista de muelles
+    mostrarLista(&puerto->listaMuelles, mostrarMuelle);
     printf("  Buques esperando en cola: %s\n", colaVacia(&puerto->colaBuques) ? "Ninguno" : "Si");
 
     // 2. Mostrar Zonas de Almacenamiento
@@ -76,4 +71,13 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
     printf("=========================================================\n\n");
 }
 
+void mostrarMuelle(const void *muelleDato)
+{
+    const tMuelle *muelle = muelleDato;
 
+    printf("  - Muelle %s: ", muelle->codigo);
+    if (muelle->disponible)
+        printf("Disponible\n");
+    else
+        printf("No disponible\n");
+}
