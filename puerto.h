@@ -47,11 +47,20 @@ typedef struct
     int maxPuntaje;
 } tOperador;
 
+typedef struct
+{
+    int tiempoActual;
+    int puntuacionProvisoria;
+    tMuelle muelles[10];
+    int cantMuelles;
+    tCola colaBuques;
+    tLista listaZonas;      // Lista dinámica de Zonas (donde cada zona tiene una tPila)
+    tCola colaCamiones;
+} tPuerto;                   //Variables de la partida en una sola estructura
 
+//COMANDOS
 
-
-
-
+void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 
 
 #endif // PUERTO_H_INCLUDED

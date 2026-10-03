@@ -15,6 +15,7 @@
 #define LONG_VALOR_CONFIG 4
 #define ARCHIVO_NO_ENCONTRADO 789
 
+
 typedef struct
 {
     int     cap_max_pila,
@@ -32,11 +33,14 @@ typedef struct
 
 //Pantallas de juego
 void pantallaInicial(int *estadoDeJuego);
-
+int ingresarNombreOperador(char *nombreDestino);
 
 //Funciones configuracion
 int obtenerValorConfiguracion(char *cadena, FILE *archivo);
 int leerArchivoConfiguracion(tConfiguracion *configuracion);
 void configuracionMostrar(tConfiguracion *config);
+
+//Juego
+
 
 #endif // SIMULADOR_H_INCLUDED
