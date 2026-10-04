@@ -69,5 +69,6 @@ int insertarAlFinal(tLista *pl, void *dato, unsigned tam);
 int insertarSinDuplicados(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de una funcion de accion
 int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), int aceptaDuplicados, void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de si acepta dup. Si no acepta, puede que no haga nada, o que haga una accion
 int mostrarLista(const tLista *pl, void (*muestra)(const void *dato));
+//int buscarEnLista(const void *dato, const void *lista, funcion de comparacion);
 
 #endif // ESTRUCTURASDEDATOS_H_INCLUDED

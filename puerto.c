@@ -2,6 +2,16 @@
 
 ///COMANDOS
 
+
+//int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos)
+//{
+//    criterios para saber si un comando esta disponible:
+//        SALIR, VER y ESP: SIEMPRE
+//        REU --> si existe al menos una zona de almacenamiento con al menos 1 espacio libre
+//        DES --> si existe buque en algun muelle y espacio en la zona de almacenamiento
+//        ENT --> si el contenedor que pide el primer camion de la cola esta en el tope de alguna zona de almacenamiento
+//}
+
 //VER
 void mostrarEstadoPuerto(const tPuerto *puerto)
 {
@@ -81,3 +91,24 @@ void mostrarMuelle(const void *muelleDato)
     else
         printf("No disponible\n");
 }
+
+//actualizarBuques(puerto, archivo)
+//{
+//    leer archivo y comparar con el tiempo actual a ver si llega algun buque
+//      if (hay buque)
+    //      if (no hay muelle disponible)
+//          {
+//            insertar buque en cola de espera del puerto
+//          }
+//          else
+//          {
+//            asignar a muelle
+//          }
+//}
+//
+////actualizarCamiones(puerto, archivo)
+//{
+//    leer archivo y comprar con el tiempo actual a ver si llega algun camion
+//        if (hay camion)
+//            insertar en cola de espera
+//}

@@ -316,3 +316,8 @@ int mostrarLista(const tLista *pl, void (*muestra)(const void *dato))
 
     return TODO_OK;
 }
+
+//int buscarEnLista(const void *dato, const void *lista, funcion de comparacion)
+//{
+//
+//}

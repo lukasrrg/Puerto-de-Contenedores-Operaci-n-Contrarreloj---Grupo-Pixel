@@ -15,6 +15,9 @@
 #define MUELLE_DISPONIBLE 1
 #define MUELLE_NO_DISPONIBLE 0
 
+#define FIN_DE_JORNADA 0
+#define JORNADA_ACTIVA 1
+
 typedef struct
 {
     char codigo[TAM_COD_CONTENEDOR];
@@ -61,7 +64,7 @@ typedef struct
 } tPuerto;                   //Variables de la partida en una sola estructura
 
 //COMANDOS
-
+//int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 
 void mostrarMuelle(const void *muelle);

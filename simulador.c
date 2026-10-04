@@ -68,33 +68,76 @@ int ingresarNombreOperador(char *nombreDestino)
 void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp)
 {
     char comando[10];
-    int jornadaActiva = 1;
+    //tener alguna tLista llamada listaComandos, en donde se pueda verificar si un comando esta disponible o no
+    int jornadaActiva = JORNADA_ACTIVA;
 
     while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
-            {
-                printf("<%s> ", nombreOp);
-                scanf("%s", comando); // Leemos el comando escrito
-                stringMayuscula(comando);   //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
+    {
+        //Actualizar buques y camiones para el T actual
+        //actualizarBuques(puerto, archivo)
+        //actualizarCamiones(puerto, archivo)
 
-                system("cls"); // Limpia toda la pantalla ANTES de mostrar el menú
+        printf("Comandos disponibles: ");
+        //mostrarComandosDisponibles A IMPLEMENTAR
+        printf("\n<%s> ", nombreOp);
+        scanf("%s", comando); // Leemos el comando escrito
+        stringMayuscula(comando);   //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
 
-                if (strcmp(comando, "VER") == 0)
-                {
-                    mostrarEstadoPuerto(puerto); // Llama a la función
-                }
-                else if (strcmp(comando, "ESP") == 0)
-                {
-                    puerto->tiempoActual++; // ESP avanza el reloj 1 minuto
-                }
-                else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
-                {
-                    jornadaActiva = 0;
-                }
-                else
-                {
-                    printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
-                }
-            }
+        system("cls"); // Limpia toda la pantalla ANTES de mostrar el menú
+
+        //Aca habria que comparar "comando" no con todos los comandos del juego, sino solo con los comandos disponibles
+        //o sea --> buscarEnLista(comando, listaComandos, funcion de comparacion)   SI "comando" NO EXISTE EN "listaComandos" volver a pedir el ingreso del comando
+        //tambien tener en cuenta que los comandos des y reu reciben parametros
+        //tambien verificar si el tiempo de esa accion llega a entrar dentro del tiempo de la jornada
+        if (strcmp(comando, "DES") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_descarga_contenedor;
+            //Aumentar puntuacion
+        }
+        else if (strcmp(comando, "REU") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
+        }
+        else if (strcmp(comando, "ENT") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_carga_camion;
+            //Aumentar puntuacion
+        }
+        else if (strcmp(comando, "VER") == 0)
+        {
+            mostrarEstadoPuerto(puerto); // Llama a la función
+        }
+        else if (strcmp(comando, "ESP") == 0)
+        {
+            puerto->tiempoActual++; // ESP avanza el reloj 1 minuto
+        }
+        else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
+        {
+            jornadaActiva = FIN_DE_JORNADA;
+        }
+        else
+        {
+            printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
+        }
+
+        //Registrar la operacion realizada
+
+
+        //Actualizacion (capaz se puede hacer al principio del while)
+        //if (comandosDisponibles(puerto, listaComandos))
+//        {Hacer una lista de comandos disponibles?}
+//        else if (verificar si quedan eventos futuros o buques con contenedores o camiones esperando)
+//        {
+//            avance automatico del tiempo
+//        }
+//        else
+//        {
+//            jornadaActiva = FIN_DE_JORNADA
+//        }
+
+
+
+    }
 }
 
 //Funciones configuracion
