@@ -3,6 +3,8 @@
 //Pantallas del juego
 void pantallaInicial(int *estadoDeJuego)
 {
+    int caracter;
+
     printf("Puerto de Contenedores - Operacion Contrarreloj\nGrupo Pixel\n");
     printf("\nIngrese...");
     printf("\n1 para JUGAR");
@@ -15,8 +17,7 @@ void pantallaInicial(int *estadoDeJuego)
         scanf("%d", estadoDeJuego);
 
         // LIMPIEZA CLAVE DEL BUFFER: Limpia todo caracter sobrante incluido el '\n'
-        int c;
-        while ((c = getchar()) != '\n' && c != EOF);
+        while ((caracter = getchar()) != '\n' && caracter != EOF);
 
         if(*estadoDeJuego < SALIR || *estadoDeJuego > ESTADISTICAS)
             printf("Opcion no valida");
@@ -27,6 +28,7 @@ int ingresarNombreOperador(char *nombreDestino)
 {
     char operador[100]; // Buffer local para almacenar la entrada cruda del usuario por teclado
     int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validación
+    char *pSalto;
 
 
     while (esValido == OPCION_NO_VALIDA) // Bucle de lectura: permanece solicitando el dato hasta que se cumplan las precondiciones
@@ -37,7 +39,7 @@ int ingresarNombreOperador(char *nombreDestino)
         if (fgets(operador, sizeof(operador), stdin) != NULL)
         {
             // Se busca el salto de línea '\n' que genera la tecla Enter
-            char *pSalto = strchr(operador, '\n');
+            pSalto = strchr(operador, '\n');
             if (pSalto)
                 *pSalto = '\0'; // Se reemplaza por terminador nulo para limpiar la cadena
 
@@ -56,9 +58,86 @@ int ingresarNombreOperador(char *nombreDestino)
                 esValido = OPCION_VALIDA;
             }
         }
+
+        stringMayuscula(nombreDestino);
     }
 
     return TODO_OK;
+}
+
+void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp)
+{
+    char comando[10];
+    //tener alguna tLista llamada listaComandos, en donde se pueda verificar si un comando esta disponible o no
+    int jornadaActiva = JORNADA_ACTIVA;
+    int hayEventoFuturo = HAY_EVENTO_FUTURO;
+
+    while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
+    {
+        //Actualizar buques y camiones para el T actual
+        hayEventoFuturo = actualizarBuquesCamiones(puerto);
+
+        printf("Comandos disponibles: ");
+        //mostrarComandosDisponibles A IMPLEMENTAR
+        printf("\n<%s> ", nombreOp);
+        scanf("%s", comando);               // Leemos el comando escrito
+        stringMayuscula(comando);           //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
+
+        system("cls");                      // Limpia toda la pantalla ANTES de mostrar el menú
+
+        //Aca habria que comparar "comando" no con todos los comandos del juego, sino solo con los comandos disponibles
+        //o sea --> buscarEnLista(comando, listaComandos, funcion de comparacion)   SI "comando" NO EXISTE EN "listaComandos" volver a pedir el ingreso del comando
+        //tambien tener en cuenta que los comandos des y reu reciben parametros
+        //tambien verificar si el tiempo de esa accion llega a entrar dentro del tiempo de la jornada
+        if (strcmp(comando, "DES") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_descarga_contenedor;
+            //Aumentar puntuacion
+        }
+        else if (strcmp(comando, "REU") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
+        }
+        else if (strcmp(comando, "ENT") == 0)
+        {
+            puerto->tiempoActual += configuracion->tiempo_carga_camion;
+            //Aumentar puntuacion
+        }
+        else if (strcmp(comando, "VER") == 0)
+        {
+            mostrarEstadoPuerto(puerto); // Llama a la función
+        }
+        else if (strcmp(comando, "ESP") == 0)
+        {
+            puerto->tiempoActual++; // ESP avanza el reloj 1 minuto
+        }
+        else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
+        {
+            jornadaActiva = FIN_DE_JORNADA;
+        }
+        else
+        {
+            printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
+        }
+
+        //Registrar la operacion realizada
+
+
+        //Actualizacion (capaz se puede hacer al principio del while)
+        //if (comandosDisponibles(puerto, listaComandos))
+//        {Hacer una lista de comandos disponibles?}
+//        else if (verificar si quedan eventos futuros o buques con contenedores o camiones esperando)
+//        {
+//            avance automatico del tiempo
+//        }
+//        else
+//        {
+//            jornadaActiva = FIN_DE_JORNADA
+//        }
+
+
+
+    }
 }
 
 //Funciones configuracion
@@ -109,6 +188,35 @@ void configuracionMostrar(tConfiguracion *config)
     printf("maximo_contenedores_por_buque %d\n", config->maximo_contenedores_por_buque);
 }
 
+void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
+{
+    puerto->tiempoAnterior = -1;
+    puerto->tiempoActual = 0;
+    puerto->puntuacionProvisoria = 0;
+    crearLista(&puerto->listaMuelles);
+    inicializarMuelles(&puerto->listaMuelles, configuracion->cantidad_muelles);
+    crearLista(&puerto->listaZonas);
+    crearCola(&puerto->colaBuques);
+    crearCola(&puerto->colaCamiones);
+}
+
+void inicializarMuelles(tLista *listaMuelles, int cantidad)
+{
+    int i;
+    tMuelle muelleActual;
+    char codigo[TAM_COD_MUELLE];
+
+    for (i = 1; i <= cantidad; i++)
+    {
+        strcpy(muelleActual.codigo, "M");
+        itoa(i, codigo, 10);
+        strcat(muelleActual.codigo, codigo);
+
+        muelleActual.buqueActual = NULL;
+
+        insertarAlFinal(listaMuelles, &muelleActual, sizeof(tMuelle));
+    }
+}
 
 //Juego
 void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
@@ -157,5 +265,15 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
                 printf("[ERROR] Comando no reconocido. Intente VER, DES, REU, ENT o ESP.\n");
             }
         }
+    }
+}
+
+//Funciones auxiliares
+void stringMayuscula(char *str)
+{
+    while(*str != '\0')
+    {
+        *str = toupper(*str);
+        str++;
     }
 }

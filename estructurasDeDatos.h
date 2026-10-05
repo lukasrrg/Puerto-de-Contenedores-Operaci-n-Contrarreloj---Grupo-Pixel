@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 
 //Defines pila
 #define TAM_PILA 50
@@ -13,9 +14,13 @@
 #define ERROR_SIN_MEM 123
 #define ERROR_COLA_VACIA 456
 //Defines lista
+#define ERROR_LISTA_VACIA -888
 #define ERROR_ELEM_DUP -999
 #define ACEPTA_DUP 1
 #define NO_ACEPTA_DUP 0
+#define ELEM_ENCONTRADO 1
+#define ELEM_NO_ENCONTRADO 0
+#define HAY_OCURRENCIA 0
 
 #define TODO_OK 0
 #define minimo(X,Y) ((X) < (Y)) ? (X) : (Y)
@@ -66,6 +71,7 @@ int listaVacia(tLista *pl);
 int insertarAlFinal(tLista *pl, void *dato, unsigned tam);
 int insertarSinDuplicados(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de una funcion de accion
 int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), int aceptaDuplicados, void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de si acepta dup. Si no acepta, puede que no haga nada, o que haga una accion
-
+int mostrarLista(const tLista *pl, void (*muestra)(const void *dato));
+int buscarEnLista(const tLista *pl, const void *buscado, void *devolver, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *dato, void *devolucion));
 
 #endif // ESTRUCTURASDEDATOS_H_INCLUDED
