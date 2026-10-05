@@ -13,7 +13,9 @@
 #define OPCION_NO_VALIDA 0
 
 #define LONG_VALOR_CONFIG 4
-#define ARCHIVO_NO_ENCONTRADO 789
+
+
+
 
 
 typedef struct
