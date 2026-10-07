@@ -198,6 +198,7 @@ void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
     crearLista(&puerto->listaZonas);
     crearCola(&puerto->colaBuques);
     crearCola(&puerto->colaCamiones);
+    crearZonas(&puerto->listaZonas, configuracion->cantidad_zonas, configuracion->cap_max_pila);
     // (Acá debería inicializar los muelles según configuracion)
 }
 
@@ -219,7 +220,64 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad)
     }
 }
 
+void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
+{
+    tZona *zona;
+    int i;
+    char buffer[4];
+    for (i=1;i<=cantidadZonas;i++)
+    {
+        crearPila(&(zona->pila));
+        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
+        itoa(i, buffer, 10);
+        strcpy(zona->codigo,"Z");
+        strcat(zona->codigo,buffer);
+
+        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+    }
+}
+
 //Juego
+
+tLista* localizarZona(tLista *listaZonas, const char codZona)
+{
+    int comp;
+    tNodo* nodoActual = *listaZonas;
+    if(!(*listaZonas))
+    {
+        return NULL;
+    }
+    comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    while(*listaZonas || comp!=0)
+    {
+        nodoActual=nodoActual->sig;
+        comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    }
+
+    if(comp!=0)
+    {
+        return NULL;
+    }
+
+    return nodoActual;
+}
+
+int descargar(tLista *listaZonas, const char codZona)
+{
+    char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
+                                            //esto es una version basica
+    if(!listaZonas)
+    {
+        return -1;  //esto no deberia pasar, a menos que la cantidad de zonas en config.txt sea 0
+    }
+    return 0;
+}
+
+int reubicar(tLista *listaZonas, const char codZona1, const char codZona2)
+{
+    return 0;
+}
+
 void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 {
     char lineaComando[100];
@@ -277,4 +335,12 @@ void stringMayuscula(char *str)
         *str = toupper(*str);
         str++;
     }
+}
+
+int cmpCodZona(const void* c1, const void* c2)
+{
+    const char *cod1, *cod2;
+    cod1= (const char *) c1;
+    cod2= (const char *) c2;
+    return strcmp(cod1,cod2);
 }

@@ -43,9 +43,11 @@ typedef struct
 
 typedef struct
 {
-    char codigo[TAM_COD_ZONA];
-} tZona;                            //Si no tiene ningun otro campo quizas es mas facil hacer directamente typedef char codigo[TAM_COD_ZONA] tZona
-                                    //La Zona no deberia tener tambien una Pila de Contenedores?
+    tPila pila;
+    int capacidad;
+    char codigo [TAM_COD_ZONA];
+} tZona;                            //cada zona tiene su pila, código de zona y capacidad
+
 typedef struct
 {
     char nombre[TAM_MAX_NOMBRE_OPERADOR];
