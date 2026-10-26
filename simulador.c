@@ -96,6 +96,10 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         }
         else if (strcmp(comando, "REU") == 0)
         {
+            if (verificarZonas(comando,&(puerto->listaZonas)))
+            {
+                reubicar(&(puerto->listaZonas),comando);
+            }//o se puede hacer todo en una sola función
             puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
         }
         else if (strcmp(comando, "ENT") == 0)
@@ -239,7 +243,7 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
 //Juego
 
-tLista* localizarZona(tLista *listaZonas, const char codZona)
+tNodo* localizarZona(tLista *listaZonas, const char codZona)
 {
     int comp;
     tNodo* nodoActual = *listaZonas;
@@ -262,6 +266,12 @@ tLista* localizarZona(tLista *listaZonas, const char codZona)
     return nodoActual;
 }
 
+int verificarZonas (const char codzona, tLista* listaZonas)
+{
+    //TERMINAR DE HACER (podría recorrer la lista de zonas hasta el final para verificar si existe)
+    return 1;
+}
+
 int descargar(tLista *listaZonas, const char codZona)
 {
     char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
@@ -273,8 +283,18 @@ int descargar(tLista *listaZonas, const char codZona)
     return 0;
 }
 
-int reubicar(tLista *listaZonas, const char codZona1, const char codZona2)
+int reubicar(tLista *listaZonas, const char codZona)
 {
+    tNodo* zonaInsertar, *zonaRetirar;
+    char container[4];
+    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
+    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
+    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    {
+        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
+        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
+        return 1;
+    }
     return 0;
 }
 
