@@ -9,8 +9,21 @@
 #define TAM_COD_CAMION 5
 #define TAM_COD_ZONA 3
 #define TAM_MAX_NOMBRE_OPERADOR 6
+#define MAX_LARGO_LINEA 200
 
 #define TODO_OK 0
+
+#define HAY_EVENTO_FUTURO 1
+#define NO_HAY_EVENTO_FUTURO 0
+//#define MUELLE_DISPONIBLE 1
+//#define MUELLE_NO_DISPONIBLE 0
+
+#define FIN_DE_JORNADA 0
+#define JORNADA_ACTIVA 1
+
+#define ARCHIVO_NO_ENCONTRADO 789
+
+
 
 typedef struct
 {
@@ -19,15 +32,16 @@ typedef struct
 
 typedef struct
 {
-    char codigo[TAM_COD_MUELLE];
-    int disponible; //Actua como booleano, 0 = no disponible, 1 = disponible
-} tMuelle;
+    char codigo[TAM_COD_BUQUE];
+    tCola sigContenedor;
+} tBuque;
 
 typedef struct
 {
-    char codigo[TAM_COD_BUQUE];
-    //tPila o tCola sigContenedor;      Decidir si se usa con pila o con cola
-} tBuque;
+    char codigo[TAM_COD_MUELLE];
+    tBuque *buqueActual;            //Si vale NULL es porque esta disponible
+//    int disponible; //Actua como booleano, 0 = no disponible, 1 = disponible      (SI DEFINIMOS EL CAMPOR buqueActual CREO QUE NO HACE FALTA)
+} tMuelle;
 
 typedef struct
 {
@@ -49,18 +63,33 @@ typedef struct
 
 typedef struct
 {
+    int tiempoAnterior;
     int tiempoActual;
     int puntuacionProvisoria;
-    tMuelle muelles[10];
-    int cantMuelles;
+    tLista listaMuelles;
     tCola colaBuques;
     tLista listaZonas;      // Lista dinámica de Zonas (donde cada zona tiene una tPila)
     tCola colaCamiones;
 } tPuerto;                   //Variables de la partida en una sola estructura
 
-//COMANDOS
+typedef struct
+{
+    char tipo;              //Vale B si es un buque o K si es un camion
+    int tiempo;
+    tCola contenedores;
+} tEventoFuturo;
 
+//COMANDOS
+//int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 
+//Funciones de buques, camiones, contenedor, etc
+void mostrarMuelle(const void *muelle);
+void mostrarBuque(const void *buqueDato);
+int actualizarBuquesCamiones(tPuerto *puerto);                      //Devuelve HAY_EVENTO_FUTURO o NO_HAY_EVENTO_FUTURO
+int procesarLineaPuerto(char *linea, tPuerto *puerto);      //Devuelve HAY_EVENTO_FUTURO o NO_HAY_EVENTO_FUTURO
+int muelleDisponible(const void *muelleDato, const void *nulo);
+void devolverMuelle(void *dato, void *destino);
+void atracarBuque(tMuelle *muelle, tBuque *buque);
 
 #endif // PUERTO_H_INCLUDED

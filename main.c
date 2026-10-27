@@ -6,8 +6,7 @@ int main()
     tConfiguracion configuracion;
     char nombreOp[TAM_MAX_NOMBRE_OPERADOR];
 
-    char comando[10];
-    int jornadaActiva;
+    tPuerto miPuerto;
 
     while (estadoActualDeJuego != SALIR)
     {
@@ -20,7 +19,6 @@ int main()
             break;
 
         case JUGAR:
-
             system("cls"); // Limpia toda la pantalla ANTES
 
             // 1. Pedimos el nombre del operador
@@ -34,45 +32,13 @@ int main()
                 configuracionMostrar(&configuracion);
             }
             // 3. Inicializamos el estado del puerto
-            tPuerto miPuerto;
-            miPuerto.tiempoActual = 0;
-            miPuerto.puntuacionProvisoria = 0;
-            miPuerto.cantMuelles = configuracion.cantidad_muelles;
-            crearLista(&miPuerto.listaZonas);
-            crearCola(&miPuerto.colaBuques);
-            crearCola(&miPuerto.colaCamiones);
-            // (Acá debería inicializar los muelles según configuracion)
-
+            inicializarPuerto(&miPuerto, &configuracion);
 
             printf("\n=== INICIO DE LA JORNADA (T = 0) ===\n");
 
-
-            jornadaActiva = 1;
-
             // 4. Bucle de la jornada operativa
-            while (jornadaActiva && miPuerto.tiempoActual < configuracion.duracion_jornada_minutos)
-            {
-                printf("OPERADOR ");
-                scanf("%s", comando); // Leemos el comando escrito
-                system("cls"); // Limpia toda la pantalla ANTES de mostrar el menú
-
-                if (strcmp(comando, "VER") == 0)
-                {
-                    mostrarEstadoPuerto(&miPuerto); // Llama a la función
-                }
-                else if (strcmp(comando, "ESP") == 0)
-                {
-                    miPuerto.tiempoActual++; // ESP avanza el reloj 1 minuto
-                }
-                else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
-                {
-                    jornadaActiva = 0;
-                }
-                else
-                {
-                    printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
-                }
-            }
+            jornadaOperativa(&miPuerto, &configuracion, nombreOp);
+            //Mostrar puntuacion final antes de ir a la pantalla inicial A IMPLEMENTAR
 
             // 5. Al terminar la simulación, volvemos a la pantalla inicial
             estadoActualDeJuego = PANTALLA_INICIAL;
@@ -80,12 +46,16 @@ int main()
 
         case ESTADISTICAS:
             printf("\n--- ESTADISTICAS Y RANKING ---\n");
+            //mostrarEstadisticas() A IMPLEMENTAR
+            system("pause");
             // Volvemos a la pantalla inicial tras mostrar estadísticas
             estadoActualDeJuego = PANTALLA_INICIAL;
             break;
         }
     }
 
+
+    //vaciarTodo            A IMPLEMENTAR (todo para lo que se haya reservado memoria dinamica y no se haya liberado, agregarlo aca)
     return TODO_OK;
 }
 
