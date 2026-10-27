@@ -100,8 +100,11 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         }
         else if (strcmp(comando, "ENT") == 0)
         {
-            puerto->tiempoActual += configuracion->tiempo_carga_camion;
-            //Aumentar puntuacion
+            if(entregarContenedor(puerto) == TODO_OK)
+            {
+                puerto->tiempoActual += configuracion->tiempo_carga_camion;
+                puerto->puntuacionProvisoria += 10;
+            }
         }
         else if (strcmp(comando, "VER") == 0)
         {

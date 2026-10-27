@@ -17,6 +17,7 @@
 #define NO_HAY_EVENTO_FUTURO 0
 //#define MUELLE_DISPONIBLE 1
 //#define MUELLE_NO_DISPONIBLE 0
+#define CONTENEDOR_NO_ENCONTRADO 51
 
 #define FIN_DE_JORNADA 0
 #define JORNADA_ACTIVA 1
@@ -52,6 +53,7 @@ typedef struct
 typedef struct
 {
     char codigo[TAM_COD_ZONA];
+    tPila pilaContenedores;
 } tZona;                            //Si no tiene ningun otro campo quizas es mas facil hacer directamente typedef char codigo[TAM_COD_ZONA] tZona
                                     //La Zona no deberia tener tambien una Pila de Contenedores?
 typedef struct
@@ -82,6 +84,7 @@ typedef struct
 //COMANDOS
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
+int entregarContenedor(tPuerto *puerto); //ENT
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelle);
