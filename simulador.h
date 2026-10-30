@@ -1,8 +1,9 @@
 #ifndef SIMULADOR_H_INCLUDED
 #define SIMULADOR_H_INCLUDED
 
-#include "puerto.h"
 #include "estructurasDeDatos.h"
+
+//typedef struct tPuerto tPuerto;
 
 //Estados de juego
 #define PANTALLA_INICIAL -1
@@ -31,6 +32,8 @@ typedef struct
             maximo_contenedores_por_buque;
 } tConfiguracion;
 
+#include "puerto.h" //Este include es para que tome tConfiguracion en puerto (No mover)
+
 //typedef int (Cmp*)(const void*, const void*);    pensé en usarlo para cmpCodZona, pero por ahora no lo veo necesario
 
 //Pantallas de juego
@@ -47,10 +50,10 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad);
 void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas);
 
 //Juego
-tLista* localizarZona(tLista *listaZonas, const char codZona);
-int descargar(tLista *listaZonas, const char codZona);
-int reubicar(tLista *listaZonas, const char codZona1, const char codZona2);
-
+void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario);
+tNodo* localizarZona(tLista *listaZonas, const char *codZona);
+int verificarZonas(const char *codzona, tLista *listaZonas);
+int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto);
 
 //Funciones auxiliares
 void stringMayuscula(char *str);
