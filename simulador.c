@@ -1,4 +1,5 @@
 #include "simulador.h"
+#include "puerto.h"
 
 //Pantallas del juego
 void pantallaInicial(int *estadoDeJuego)
@@ -21,7 +22,8 @@ void pantallaInicial(int *estadoDeJuego)
 
         if(*estadoDeJuego < SALIR || *estadoDeJuego > ESTADISTICAS)
             printf("Opcion no valida");
-    } while(*estadoDeJuego < SALIR || *estadoDeJuego > ESTADISTICAS);
+    }
+    while(*estadoDeJuego < SALIR || *estadoDeJuego > ESTADISTICAS);
 }
 
 int ingresarNombreOperador(char *nombreDestino)
@@ -156,27 +158,52 @@ int obtenerValorConfiguracion(char *cadena, FILE *archivo)
     return valor;
 }
 
+
 int leerArchivoConfiguracion(tConfiguracion *configuracion)
 {
-    FILE *archivo = fopen("config.txt", "r");
-    if(archivo == NULL)
+    FILE *archivo = fopen("config.txt", "rt");
+    if (archivo == NULL)
         return ARCHIVO_NO_ENCONTRADO;
 
-    configuracion->cap_max_pila = obtenerValorConfiguracion("cap_max_pila ", archivo);
-    configuracion->tiempo_descarga_contenedor = obtenerValorConfiguracion("tiempo_descarga_contenedor ", archivo);
-    configuracion->tiempo_reubicacion_contenedor = obtenerValorConfiguracion("tiempo_reubicacion_contenedor ", archivo);
-    configuracion->tiempo_carga_camion = obtenerValorConfiguracion("tiempo_carga_camion ", archivo);
-    configuracion->duracion_jornada_minutos = obtenerValorConfiguracion("duracion_jornada_minutos ", archivo);
-    configuracion->cantidad_muelles = obtenerValorConfiguracion("cantidad_muelles ", archivo);
-    configuracion->cantidad_zonas = obtenerValorConfiguracion("cantidad_zonas ", archivo);
-    configuracion->maximo_buques = obtenerValorConfiguracion("maximo_buques ", archivo);
-    configuracion->maximo_camion = obtenerValorConfiguracion("maximo_camion ", archivo);
-    configuracion->maximo_contenedores_por_buque = obtenerValorConfiguracion("maximo_contenedores_por_buque ", archivo);
+    char linea[128];
+    char clave[60];
+    int valor;
+
+    while (fgets(linea, sizeof(linea), archivo) != NULL)
+    {
+        // Ignorar líneas vacías o comentarios
+        if (linea[0] == '\n' || linea[0] == '\r' || linea[0] == '#')
+            continue;
+
+        if (sscanf(linea, "%s %d", clave, &valor) == 2)
+        {
+            if (strcmp(clave, "cap_max_pila") == 0)
+                configuracion->cap_max_pila = valor;
+            else if (strcmp(clave, "tiempo_descarga_contenedor") == 0)
+                configuracion->tiempo_descarga_contenedor = valor;
+            else if (strcmp(clave, "tiempo_reubicacion_contenedor") == 0)
+                configuracion->tiempo_reubicacion_contenedor = valor;
+            else if (strcmp(clave, "tiempo_carga_camion") == 0)
+                configuracion->tiempo_carga_camion = valor;
+            else if (strcmp(clave, "duracion_jornada_minutos") == 0)
+                configuracion->duracion_jornada_minutos = valor;
+            else if (strcmp(clave, "cantidad_muelles") == 0)
+                configuracion->cantidad_muelles = valor;
+            else if (strcmp(clave, "cantidad_zonas") == 0)
+                configuracion->cantidad_zonas = valor;
+            else if (strcmp(clave, "maximo_buques") == 0)
+                configuracion->maximo_buques = valor;
+            else if (strcmp(clave, "maximo_camion") == 0)
+                configuracion->maximo_camion = valor;
+            else if (strcmp(clave, "maximo_contenedores_por_buque") == 0)
+                configuracion->maximo_contenedores_por_buque = valor;
+        }
+    }
 
     fclose(archivo);
-
     return TODO_OK;
 }
+
 
 void configuracionMostrar(tConfiguracion *config)
 {
@@ -226,6 +253,17 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad)
 
 void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 {
+    for (int i = 1; i <= cantidadZonas; i++)
+    {
+        tZona nuevaZona;
+        memset(&nuevaZona, 0, sizeof(tZona));
+
+        crearPila(&nuevaZona.pila);
+        nuevaZona.capacidad = capacidadZonas;
+        snprintf(nuevaZona.codigo, sizeof(nuevaZona.codigo), "Z%d", i);
+
+        // Copia los bytes de nuevaZona dentro de la memoria del nodo de la lista
+        insertarAlFinal(listaZonas, &nuevaZona, sizeof(tZona));
     tZona *zona;
     int i;
     char buffer[4];
@@ -243,6 +281,44 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
 //Juego
 
+tNodo* localizarZona(tLista *listaZonas, const char *codZona)
+{
+    if (listaZonas == NULL || *listaZonas == NULL || codZona == NULL)
+    {
+        return NULL;
+    }
+
+    tNodo *nodoActual = *listaZonas;
+
+    while (nodoActual != NULL)
+    {
+        tZona *zonaAux = (tZona *)nodoActual->dato;
+
+        if (strcmp(codZona, zonaAux->codigo) == 0)
+        {
+            return nodoActual; // Retorna el nodo de la zona encontrada
+        }
+
+        nodoActual = nodoActual->sig; // Avanza al siguiente nodo
+    }
+
+    return NULL; // Recorrió toda la lista y la zona no existe
+}
+
+
+int verificarZonas(const char *codzona, tLista *listaZonas)
+{
+    // Si localizarZona encuentra la zona (devuelve un puntero != NULL), la zona existe (devuelve 1)
+    // Si devuelve NULL, la zona no existe (devuelve 0)
+    if (localizarZona(listaZonas, codzona) != NULL)
+    {
+        return 1; // Zona existente / válida
+    }
+
+    return 0; // Zona inexistente
+}
+
+void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario)
 tNodo* localizarZona(tLista *listaZonas, const char codZona)
 {
     int comp;
@@ -309,10 +385,86 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 
     while (continuarJornada && puerto->tiempoActual < config->duracion_jornada_minutos)
     {
+        //system("cls"); // Limpia la pantalla al iniciar cada turno de la consola
+
+        printf("=== MINUTO ACTUAL T = %d min ===\n", puerto->tiempoActual);
+
+        // 1. Procesar los arribos del minuto T actual desde puerto.txt
+        if (archEscenario != NULL)
+        {
+            procesarArribosDelMinuto(archEscenario, puerto);
+        }
+
         printf("\nOPERADOR> ");
 
         if (fgets(lineaComando, sizeof(lineaComando), stdin) != NULL)
         {
+            if (sscanf(lineaComando, "%s", comando) == 1)
+            {
+                stringMayuscula(comando);
+
+                // ==========================================
+                // COMANDO VER
+                // ==========================================
+                if (strcmp(comando, "VER") == 0)
+                {
+                    system("cls");
+                    mostrarEstadoPuerto(puerto);
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar(); // PAUSA CLAVE para leer el estado antes de limpiar
+                }
+                // ==========================================
+                // COMANDO DES (DES <muelle> <zona>)
+                // ==========================================
+                else if (strcmp(comando, "DES") == 0)
+                {
+                    system("cls");
+                    char codMuelle[TAM_COD_MUELLE];
+                    char codZona[TAM_COD_ZONA];
+
+                    if (sscanf(lineaComando, "%*s %s %s", codMuelle, codZona) == 2)
+                    {
+                        stringMayuscula(codMuelle);
+                        stringMayuscula(codZona);
+                        descargar(puerto, config, codMuelle, codZona);
+                    }
+                    else
+                    {
+                        printf("\n[ERROR] Sintaxis incorrecta. Uso: DES <muelle> <zona> (Ej: DES M1 Z1)\n");
+                    }
+
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
+                // ==========================================
+                // COMANDO ESP (Avanzar 1 minuto voluntariamente)
+                // ==========================================
+                else if (strcmp(comando, "ESP") == 0)
+                {
+                    system("cls");
+                    puerto->tiempoActual++;
+                    printf(" -> [TIEMPO AVANZADO] Reloj actual T = %d min.\n", puerto->tiempoActual);
+                }
+                // ==========================================
+                // COMANDO SALIR
+                // ==========================================
+                else if (strcmp(comando, "SALIR") == 0)
+                {
+                    continuarJornada = 0;
+                    printf("\nJornada operativa finalizada por el operador.\n");
+                    printf("\nPresione Enter para salir al menu...");
+                    fflush(stdin);
+                    getchar();
+                }
+                else
+                {
+                    printf("\n[ERROR] Comando no reconocido. Intente VER, DES, ESP o SALIR.\n");
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
             // Extraemos únicamente el primer código de operación (ej: DES, REU, ENT, VER, ESP)
             sscanf(lineaComando, "%s", comando);
 
@@ -335,16 +487,106 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
             {
                 // TODO: Lógica para Entregar contenedor al camión (ENT)
             }
-            else if (strcmp(comando, "ESP") == 0)
+        }
+    }
+
+    if (puerto->tiempoActual >= config->duracion_jornada_minutos)
+    {
+        printf("\n=== TIEMPO LIMITE ALCANZADO: FIN DE LA JORNADA (T = %d min) ===\n", puerto->tiempoActual);
+        printf("\nPresione Enter para volver al menu principal...");
+        fflush(stdin);
+        getchar();
+    }
+}
+
+
+int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
+{
+    if (archEscenario == NULL || puerto == NULL)
+        return ARCHIVO_NO_ENCONTRADO;
+
+    char linea[200];
+    int tiempoArribo;
+
+    // Reposicionamos al inicio del archivo para escanear los arribos del minuto T actual
+    rewind(archEscenario);
+
+    while (fgets(linea, sizeof(linea), archEscenario) != NULL)
+    {
+        if (linea[0] == '[' || linea[0] == '\n' || linea[0] == '\r')
+            continue;
+
+        // 1. CAMIONES (Líneas que empiezan con 'K')
+        if (linea[0] == 'K')
+        {
+            tCamion nuevoCamion;
+            memset(&nuevoCamion, 0, sizeof(tCamion));
+
+            if (sscanf(linea, "%[^;];T=%d;C=%s", nuevoCamion.codigo, &tiempoArribo, nuevoCamion.contenedorBuscado.codigo) == 3)
             {
-                // TODO: Avanzar el reloj 1 minuto voluntariamente (ESP)
+                if (tiempoArribo == puerto->tiempoActual)
+                {
+                    ponerEnCola(&puerto->colaCamiones, &nuevoCamion, sizeof(tCamion));
+                    printf(" -> [ARRIBO T=%d] Camion %s arribo buscando %s.\n",
+                           puerto->tiempoActual, nuevoCamion.codigo, nuevoCamion.contenedorBuscado.codigo);
+                }
             }
-            else
+        }
+        // 2. BUQUES (Líneas que empiezan con 'B')
+        else if (linea[0] == 'B')
+        {
+            tBuque nuevoBuque;
+            char listaContenedores[100];
+            memset(&nuevoBuque, 0, sizeof(tBuque));
+
+            if (sscanf(linea, "%[^;];T=%d;C=%s", nuevoBuque.codigo, &tiempoArribo, listaContenedores) == 3)
             {
-                printf("[ERROR] Comando no reconocido. Intente VER, DES, REU, ENT o ESP.\n");
+                if (tiempoArribo == puerto->tiempoActual)
+                {
+                    crearCola(&nuevoBuque.sigContenedor);
+
+                    char *token = strtok(listaContenedores, ",\r\n");
+                    while (token != NULL)
+                    {
+                        tContenedor cont;
+                        memset(&cont, 0, sizeof(tContenedor));
+                        snprintf(cont.codigo, sizeof(cont.codigo), "%s", token);
+
+                        ponerEnCola(&nuevoBuque.sigContenedor, &cont, sizeof(tContenedor));
+                        token = strtok(NULL, ",\r\n");
+                    }
+
+                    // Buscamos un muelle disponible para atracarlo
+                    int idxMuelle = -1;
+                    for (int i = 0; i < puerto->cantMuelles; i++)
+                    {
+                        if (puerto->muelles[i].disponible == 1)
+                        {
+                            idxMuelle = i;
+                            break;
+                        }
+                    }
+
+                    if (idxMuelle != -1)
+                    {
+                        puerto->muelles[idxMuelle].disponible = 0; // Ocupado
+                        puerto->muelles[idxMuelle].buqueAtracado = nuevoBuque;
+
+                        printf(" -> [ATRACO T=%d] Buque %s atraco directamente en Muelle %s.\n",
+                               puerto->tiempoActual, nuevoBuque.codigo, puerto->muelles[idxMuelle].codigo);
+                    }
+                    else
+                    {
+                        ponerEnCola(&puerto->colaBuques, &nuevoBuque, sizeof(tBuque));
+                        printf(" -> [ARRIBO T=%d] Buque %s encolado (Muelles ocupados).\n",
+                               puerto->tiempoActual, nuevoBuque.codigo);
+                    }
+                }
             }
         }
     }
+
+    return TODO_OK;
 }
 
 //Funciones auxiliares

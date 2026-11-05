@@ -3,11 +3,12 @@
 
 #include "estructurasDeDatos.h"
 
+
 #define TAM_COD_CONTENEDOR 5
-#define TAM_COD_MUELLE 3
+#define TAM_COD_MUELLE 10
 #define TAM_COD_BUQUE 5
 #define TAM_COD_CAMION 5
-#define TAM_COD_ZONA 3
+#define TAM_COD_ZONA 15
 #define TAM_MAX_NOMBRE_OPERADOR 6
 #define MAX_LARGO_LINEA 200
 
@@ -34,6 +35,8 @@ typedef struct
 {
     char codigo[TAM_COD_BUQUE];
     tCola sigContenedor;
+    //tPila o tCola sigContenedor;      Decidir si se usa con pila o con cola
+} tBuque;
 } tBuque;
 
 typedef struct
@@ -41,6 +44,13 @@ typedef struct
     char codigo[TAM_COD_MUELLE];
     tBuque *buqueActual;            //Si vale NULL es porque esta disponible
 //    int disponible; //Actua como booleano, 0 = no disponible, 1 = disponible      (SI DEFINIMOS EL CAMPOR buqueActual CREO QUE NO HACE FALTA)
+} tMuelle;
+
+typedef struct
+{
+    char codigo[TAM_COD_MUELLE];
+    int disponible; //Actua como booleano, 0 = no disponible, 1 = disponible
+    tBuque buqueAtracado;  // <--- Agregado
 } tMuelle;
 
 typedef struct
@@ -54,7 +64,8 @@ typedef struct
     tPila pila;
     int capacidad;
     char codigo [TAM_COD_ZONA];
-} tZona;                            //cada zona tiene su pila, c�digo de zona y capacidad
+} tZona;                            //cada zona tiene su pila, cÃ³digo de zona y capacidad
+} tZona;                            //cada zona tiene su pila, código de zona y capacidad
 
 typedef struct
 {
@@ -63,17 +74,21 @@ typedef struct
     int maxPuntaje;
 } tOperador;
 
+
 typedef struct
 {
     int tiempoAnterior;
     int tiempoActual;
     int puntuacionProvisoria;
     tLista listaMuelles;
+    tMuelle muelles[10];     // <--- Arreglo de muelles
+    int cantMuelles;         // <--- Cantidad de muelles
     tCola colaBuques;
-    tLista listaZonas;      // Lista din�mica de Zonas (donde cada zona tiene una tPila)
+    tLista listaZonas;      // Lista dinÃ¡mica de Zonas (donde cada zona tiene una tPila)
     tCola colaCamiones;
 } tPuerto;                   //Variables de la partida en una sola estructura
 
+#include "simulador.h" //Este include es para que lo tome a tPuerto en simulador. No mover
 typedef struct
 {
     char tipo;              //Vale B si es un buque o K si es un camion
@@ -84,6 +99,8 @@ typedef struct
 //COMANDOS
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
+int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona);
+int reubicar(tLista *listaZonas, const char codZona); //REU
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelle);
