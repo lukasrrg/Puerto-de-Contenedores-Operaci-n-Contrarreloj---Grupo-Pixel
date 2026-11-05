@@ -98,6 +98,10 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         }
         else if (strcmp(comando, "REU") == 0)
         {
+            if (verificarZonas(comando,&(puerto->listaZonas)))
+            {
+                reubicar(&(puerto->listaZonas),comando);
+            }//o se puede hacer todo en una sola función
             puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
         }
         else if (strcmp(comando, "ENT") == 0)
@@ -260,6 +264,18 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
         // Copia los bytes de nuevaZona dentro de la memoria del nodo de la lista
         insertarAlFinal(listaZonas, &nuevaZona, sizeof(tZona));
+    tZona *zona;
+    int i;
+    char buffer[4];
+    for (i=1;i<=cantidadZonas;i++)
+    {
+        crearPila(&(zona->pila));
+        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
+        itoa(i, buffer, 10);
+        strcpy(zona->codigo,"Z");
+        strcat(zona->codigo,buffer);
+
+        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
     }
 }
 
@@ -303,10 +319,69 @@ int verificarZonas(const char *codzona, tLista *listaZonas)
 }
 
 void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario)
+tNodo* localizarZona(tLista *listaZonas, const char codZona)
+{
+    int comp;
+    tNodo* nodoActual = *listaZonas;
+    if(!(*listaZonas))
+    {
+        return NULL;
+    }
+    comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    while(*listaZonas || comp!=0)
+    {
+        nodoActual=nodoActual->sig;
+        comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    }
+
+    if(comp!=0)
+    {
+        return NULL;
+    }
+
+    return nodoActual;
+}
+
+int verificarZonas (const char codzona, tLista* listaZonas)
+{
+    //TERMINAR DE HACER (podría recorrer la lista de zonas hasta el final para verificar si existe)
+    return 1;
+}
+
+int descargar(tLista *listaZonas, const char codZona)
+{
+    char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
+                                            //esto es una version basica
+    if(!listaZonas)
+    {
+        return -1;  //esto no deberia pasar, a menos que la cantidad de zonas en config.txt sea 0
+    }
+    return 0;
+}
+
+int reubicar(tLista *listaZonas, const char codZona)
+{
+    tNodo* zonaInsertar, *zonaRetirar;
+    char container[4];
+    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
+    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
+    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    {
+        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
+        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
+        return 1;
+    }
+    return 0;
+}
+
+void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 {
     char lineaComando[100];
     char comando[10];
     int continuarJornada = 1;
+
+    // Primer chequeo e impresión inicial o inicio del reloj T=0
+    printf("\n=== INICIO DE LA JORNADA OPERATIVA (T = %d) ===\n", puerto->tiempoActual);
 
     while (continuarJornada && puerto->tiempoActual < config->duracion_jornada_minutos)
     {
@@ -390,6 +465,27 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEs
                     fflush(stdin);
                     getchar();
                 }
+            // Extraemos únicamente el primer código de operación (ej: DES, REU, ENT, VER, ESP)
+            sscanf(lineaComando, "%s", comando);
+
+            // =========================================================
+            // AQUÍ UBICÁS EL CHEQUEO DEL COMANDO "VER"
+            // =========================================================
+            if (strcmp(comando, "VER") == 0)
+            {
+                mostrarEstadoPuerto(puerto); // Muestra muelles, zonas, ventana y NO consume tiempo T
+            }
+            else if (strcmp(comando, "DES") == 0)
+            {
+                // TODO: Lógica para Descargar y Almacenar (DES  )
+            }
+            else if (strcmp(comando, "REU") == 0)
+            {
+                // TODO: Lógica para Reubicar contenedor (REU  )
+            }
+            else if (strcmp(comando, "ENT") == 0)
+            {
+                // TODO: Lógica para Entregar contenedor al camión (ENT)
             }
         }
     }

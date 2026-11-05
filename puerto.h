@@ -64,6 +64,7 @@ typedef struct
     tPila pila;
     int capacidad;
     char codigo [TAM_COD_ZONA];
+} tZona;                            //cada zona tiene su pila, cÃ³digo de zona y capacidad
 } tZona;                            //cada zona tiene su pila, código de zona y capacidad
 
 typedef struct
@@ -83,7 +84,7 @@ typedef struct
     tMuelle muelles[10];     // <--- Arreglo de muelles
     int cantMuelles;         // <--- Cantidad de muelles
     tCola colaBuques;
-    tLista listaZonas;      // Lista dinámica de Zonas (donde cada zona tiene una tPila)
+    tLista listaZonas;      // Lista dinÃ¡mica de Zonas (donde cada zona tiene una tPila)
     tCola colaCamiones;
 } tPuerto;                   //Variables de la partida en una sola estructura
 
