@@ -27,7 +27,7 @@ void pantallaInicial(int *estadoDeJuego)
 int ingresarNombreOperador(char *nombreDestino)
 {
     char operador[100]; // Buffer local para almacenar la entrada cruda del usuario por teclado
-    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validaciÛn
+    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validaci√≥n
     char *pSalto;
 
 
@@ -38,20 +38,20 @@ int ingresarNombreOperador(char *nombreDestino)
         // Se utiliza fgets para evitar desbordamientos de buffer por consola
         if (fgets(operador, sizeof(operador), stdin) != NULL)
         {
-            // Se busca el salto de lÌnea '\n' que genera la tecla Enter
+            // Se busca el salto de l√≠nea '\n' que genera la tecla Enter
             pSalto = strchr(operador, '\n');
             if (pSalto)
                 *pSalto = '\0'; // Se reemplaza por terminador nulo para limpiar la cadena
 
-            // ValidaciÛn 1: Verificar si el operador ingresÛ un string vacÌo (sÛlo presionÛ Enter)
+            // Validaci√≥n 1: Verificar si el operador ingres√≥ un string vac√≠o (s√≥lo presion√≥ Enter)
             if (strlen(operador) == 0)
                 printf("[ERROR] No se ingreso nombre.\n");
 
-            // ValidaciÛn 2: Verificar si la longitud supera el lÌmite permitido por la estructura tOperador
+            // Validaci√≥n 2: Verificar si la longitud supera el l√≠mite permitido por la estructura tOperador
             else if (strlen(operador) >= TAM_MAX_NOMBRE_OPERADOR)
                 printf("[ERROR] El nombre excede el limite de %d caracteres.\n", TAM_MAX_NOMBRE_OPERADOR - 1);
 
-            // Entrada v·lida: Se copia al par·metro de salida y se habilita el fin del ciclo
+            // Entrada v√°lida: Se copia al par√°metro de salida y se habilita el fin del ciclo
             else
             {
                 strcpy(nombreDestino, operador);
@@ -83,7 +83,7 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         scanf("%s", comando);               // Leemos el comando escrito
         stringMayuscula(comando);           //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
 
-        system("cls");                      // Limpia toda la pantalla ANTES de mostrar el men˙
+        system("cls");                      // Limpia toda la pantalla ANTES de mostrar el men√∫
 
         //Aca habria que comparar "comando" no con todos los comandos del juego, sino solo con los comandos disponibles
         //o sea --> buscarEnLista(comando, listaComandos, funcion de comparacion)   SI "comando" NO EXISTE EN "listaComandos" volver a pedir el ingreso del comando
@@ -96,6 +96,10 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         }
         else if (strcmp(comando, "REU") == 0)
         {
+            if (verificarZonas(comando,&(puerto->listaZonas)))
+            {
+                reubicar(&(puerto->listaZonas),comando);
+            }//o se puede hacer todo en una sola funci√≥n
             puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
         }
         else if (strcmp(comando, "ENT") == 0)
@@ -105,7 +109,7 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
         }
         else if (strcmp(comando, "VER") == 0)
         {
-            mostrarEstadoPuerto(puerto); // Llama a la funciÛn
+            mostrarEstadoPuerto(puerto); // Llama a la funci√≥n
         }
         else if (strcmp(comando, "ESP") == 0)
         {
@@ -198,6 +202,8 @@ void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
     crearLista(&puerto->listaZonas);
     crearCola(&puerto->colaBuques);
     crearCola(&puerto->colaCamiones);
+    crearZonas(&puerto->listaZonas, configuracion->cantidad_zonas, configuracion->cap_max_pila);
+    // (Ac√° deber√≠a inicializar los muelles seg√∫n configuracion)
 }
 
 void inicializarMuelles(tLista *listaMuelles, int cantidad)
@@ -218,14 +224,87 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad)
     }
 }
 
+void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
+{
+    tZona *zona;
+    int i;
+    char buffer[4];
+    for (i=1;i<=cantidadZonas;i++)
+    {
+        crearPila(&(zona->pila));
+        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
+        itoa(i, buffer, 10);
+        strcpy(zona->codigo,"Z");
+        strcat(zona->codigo,buffer);
+
+        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+    }
+}
+
 //Juego
+
+tNodo* localizarZona(tLista *listaZonas, const char codZona)
+{
+    int comp;
+    tNodo* nodoActual = *listaZonas;
+    if(!(*listaZonas))
+    {
+        return NULL;
+    }
+    comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    while(*listaZonas || comp!=0)
+    {
+        nodoActual=nodoActual->sig;
+        comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
+    }
+
+    if(comp!=0)
+    {
+        return NULL;
+    }
+
+    return nodoActual;
+}
+
+int verificarZonas (const char codzona, tLista* listaZonas)
+{
+    //TERMINAR DE HACER (podr√≠a recorrer la lista de zonas hasta el final para verificar si existe)
+    return 1;
+}
+
+int descargar(tLista *listaZonas, const char codZona)
+{
+    char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
+                                            //esto es una version basica
+    if(!listaZonas)
+    {
+        return -1;  //esto no deberia pasar, a menos que la cantidad de zonas en config.txt sea 0
+    }
+    return 0;
+}
+
+int reubicar(tLista *listaZonas, const char codZona)
+{
+    tNodo* zonaInsertar, *zonaRetirar;
+    char container[4];
+    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
+    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
+    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    {
+        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
+        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
+        return 1;
+    }
+    return 0;
+}
+
 void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 {
     char lineaComando[100];
     char comando[10];
     int continuarJornada = 1;
 
-    // Primer chequeo e impresiÛn inicial o inicio del reloj T=0
+    // Primer chequeo e impresi√≥n inicial o inicio del reloj T=0
     printf("\n=== INICIO DE LA JORNADA OPERATIVA (T = %d) ===\n", puerto->tiempoActual);
 
     while (continuarJornada && puerto->tiempoActual < config->duracion_jornada_minutos)
@@ -234,11 +313,11 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 
         if (fgets(lineaComando, sizeof(lineaComando), stdin) != NULL)
         {
-            // Extraemos ˙nicamente el primer cÛdigo de operaciÛn (ej: DES, REU, ENT, VER, ESP)
+            // Extraemos √∫nicamente el primer c√≥digo de operaci√≥n (ej: DES, REU, ENT, VER, ESP)
             sscanf(lineaComando, "%s", comando);
 
             // =========================================================
-            // AQUÕ UBIC¡S EL CHEQUEO DEL COMANDO "VER"
+            // AQU√ç UBIC√ÅS EL CHEQUEO DEL COMANDO "VER"
             // =========================================================
             if (strcmp(comando, "VER") == 0)
             {
@@ -246,15 +325,15 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
             }
             else if (strcmp(comando, "DES") == 0)
             {
-                // TODO: LÛgica para Descargar y Almacenar (DES  )
+                // TODO: L√≥gica para Descargar y Almacenar (DES  )
             }
             else if (strcmp(comando, "REU") == 0)
             {
-                // TODO: LÛgica para Reubicar contenedor (REU  )
+                // TODO: L√≥gica para Reubicar contenedor (REU  )
             }
             else if (strcmp(comando, "ENT") == 0)
             {
-                // TODO: LÛgica para Entregar contenedor al camiÛn (ENT)
+                // TODO: L√≥gica para Entregar contenedor al cami√≥n (ENT)
             }
             else if (strcmp(comando, "ESP") == 0)
             {
@@ -276,4 +355,12 @@ void stringMayuscula(char *str)
         *str = toupper(*str);
         str++;
     }
+}
+
+int cmpCodZona(const void* c1, const void* c2)
+{
+    const char *cod1, *cod2;
+    cod1= (const char *) c1;
+    cod2= (const char *) c2;
+    return strcmp(cod1,cod2);
 }
