@@ -6,7 +6,7 @@ int main()
     tConfiguracion configuracion;
     char nombreOp[TAM_MAX_NOMBRE_OPERADOR];
 
-    tPuerto miPuerto;
+    //tPuerto miPuerto;
 
     while (estadoActualDeJuego != SALIR)
     {
@@ -19,28 +19,60 @@ int main()
             break;
 
         case JUGAR:
-            system("cls"); // Limpia toda la pantalla ANTES
+            system("cls");
 
-            // 1. Pedimos el nombre del operador
+            // 1. Pedir nombre del operador
+            fflush(stdin);
             ingresarNombreOperador(nombreOp);
-            printf("\n Operador cargado con exito: %s\n\n", nombreOp);
 
-            // 2. Leemos la configuración del archivo config.txt
+            // 2. Leer configuracion desde config.txt
             if (leerArchivoConfiguracion(&configuracion) == TODO_OK)
             {
-                printf("--- CONFIGURACION CARGADA ---\n");
                 configuracionMostrar(&configuracion);
             }
-            // 3. Inicializamos el estado del puerto
-            inicializarPuerto(&miPuerto, &configuracion);
 
-            printf("\n=== INICIO DE LA JORNADA (T = 0) ===\n");
+            // 3. Inicializacion limpia a cero del puerto
+            tPuerto miPuerto;
+            memset(&miPuerto, 0, sizeof(tPuerto));
+            miPuerto.tiempoActual = 0;
+            miPuerto.puntuacionProvisoria = 0;
 
-            // 4. Bucle de la jornada operativa
-            jornadaOperativa(&miPuerto, &configuracion, nombreOp);
-            //Mostrar puntuacion final antes de ir a la pantalla inicial A IMPLEMENTAR
+            // Inicializar muelles (limitar a maximo 10)
+            if (configuracion.cantidad_muelles > 10)
+                miPuerto.cantMuelles = 10;
+            else
+                miPuerto.cantMuelles = configuracion.cantidad_muelles;
 
-            // 5. Al terminar la simulación, volvemos a la pantalla inicial
+            for (int i = 0; i < miPuerto.cantMuelles; i++)
+            {
+                snprintf(miPuerto.muelles[i].codigo, sizeof(miPuerto.muelles[i].codigo), "M%d", i + 1);
+                miPuerto.muelles[i].disponible = 1; // 1 = Libre / Disponible
+            }
+
+            // Inicializar TDAs principales
+            crearLista(&miPuerto.listaZonas);
+            crearCola(&miPuerto.colaBuques);
+            crearCola(&miPuerto.colaCamiones);
+
+            // === CARGAR LAS ZONAS DE ALMACENAMIENTO (Z1, Z2, Z3...) ===
+            for (int i = 0; i < configuracion.cantidad_zonas; i++)
+            {
+                tZona nuevaZona;
+                memset(&nuevaZona, 0, sizeof(tZona));
+                snprintf(nuevaZona.codigo, sizeof(nuevaZona.codigo), "Z%d", i + 1);
+                crearPila(&nuevaZona.pila); // Inicializa la pila de contenedores de la zona
+
+                insertarAlFinal(&miPuerto.listaZonas, &nuevaZona, sizeof(tZona));
+            }
+
+            // Abrir archivo de escenario y ejecutar simulación
+            FILE *archEscenario = fopen("puerto.txt", "rt");
+
+            ejecutarJornada(&miPuerto, &configuracion, archEscenario);
+
+            if (archEscenario != NULL)
+                fclose(archEscenario);
+
             estadoActualDeJuego = PANTALLA_INICIAL;
             break;
 

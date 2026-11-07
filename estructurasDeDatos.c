@@ -331,3 +331,179 @@ int buscarEnLista(const tLista *pl, const void *buscado, void *devolver, int (*c
 
     return ELEM_NO_ENCONTRADO;
 }
+
+
+//Funciones Arbol
+
+void crearArbol(tArbol* pa)
+{
+    *pa=NULL;
+}
+
+void recorrerInorden(tArbol* pa, Mostrar mostrar)
+{
+    if(*pa==NULL)
+    {
+        return;
+    }
+    recorrerInorden(&(*pa)->izq,mostrar);
+    mostrar((*pa)->dato);
+    recorrerInorden(&(*pa)->der,mostrar);
+}
+
+int insertarEnArbol(tArbol* pa, void* dato, unsigned tam, Cmp cmp)
+{
+    tNodoA* nue;
+    if (*pa==NULL)
+    {
+        nue=(tNodoA*)malloc(sizeof(tNodoA));
+        nue->dato=malloc(tam);
+        if(nue==NULL || nue->dato==NULL)
+        {
+            free(nue);
+            return SIN_MEMORIA;
+        }
+        memcpy(nue->dato,dato,tam);
+        nue->tam=tam;
+        nue->der=NULL;
+        nue->izq=NULL;
+        *pa=nue;
+
+        return INSERTADO;
+    }
+    if(cmp((*pa)->dato,dato)>0)
+    {
+        return insertarEnArbol(&(*pa)->izq, dato, tam, cmp);
+    }
+    if(cmp((*pa)->dato,dato)<0)
+    {
+        return insertarEnArbol(&(*pa)->der, dato, tam, cmp);
+    }
+    return DUPLICADO;
+}
+
+int altura (tArbol* pa)
+{
+    int hi, hd;
+    if(!*pa)
+    {
+        return 0;
+    }
+    hi = altura(&(*pa)->izq);
+    hd = altura(&(*pa)->der);
+    return (hi>hd? hi:hd) +1;
+}
+
+tNodoA** buscarClave(tArbol* pa,const void* clave, Cmp cmp)
+{
+    int comp;
+
+    while ((*pa) && (comp=cmp(clave,(*pa)->dato)))
+    {
+        if (comp>0)
+        {
+            pa = &(*pa)->der;
+        }
+        else
+        {
+            pa = &(*pa)->izq;
+        }
+    }
+    if(!*pa)
+    {
+        return NULL;
+    }
+
+    return (tNodoA**)pa;
+}
+
+tNodoA** buscarMenor(tArbol* pa)
+{
+    if(*pa==NULL)
+    {
+        return NULL;
+    }
+    while((*pa)->izq!=NULL)
+    {
+        pa=&(*pa)->izq;
+    }
+    return (tNodoA**)pa;
+}
+
+tNodoA** buscarMayor(tArbol* pa)
+{
+    if(*pa==NULL)
+    {
+        return NULL;
+    }
+    while((*pa)->der!=NULL)
+    {
+        pa=&(*pa)->der;
+    }
+    return (tNodoA**)pa;
+}
+
+int eliminarRaiz(tArbol* pa)
+{
+    tNodoA **remp, *elim;
+    if(!*pa)
+    {
+        return 0;
+    }
+
+    free((*pa)->dato);
+    if(!(*pa)->izq && !(*pa)->der)
+    {
+        free(*pa);
+        *pa=NULL;
+        return 1;
+    }
+
+    remp = altura(&(*pa)->izq) > altura(&(*pa)->der) ? buscarMayor(&(*pa)->izq) : buscarMenor(&(*pa)->der);
+    elim = *remp;
+    (*pa)->dato = elim->dato;
+    (*pa)->tam = elim->tam;
+    *remp = elim->izq ? elim->izq : elim->der;
+    free(elim);
+
+    return 1;
+}
+
+int eliminarPorClave(tArbol* pa,void* clave, unsigned tam, Cmp cmp)
+{
+    if(!(pa=buscarClave(pa,clave,cmp)))
+    {
+        return 0;
+    }
+    memcpy(clave,(*pa)->dato,MINIMO((*pa)->tam,tam));
+    return eliminarRaiz(pa);
+}
+
+void cargarOrdEnBalanceado(tArbol* pa, FILE* arch, int ini, int fin)
+{
+    size_t med = (ini+fin)/2;
+    tIndice ind;
+    tAlumno alum;
+    if(ini>fin)
+    {
+        return;
+    }
+    fseek(arch,med*sizeof(tAlumno),SEEK_SET);
+    fread(&alum,sizeof(tAlumno),1,arch);
+    ind.clave=alum.codAlum;
+    ind.indiceReg=med;
+
+    insertarEnArbol(pa,&ind,sizeof(tIndice),cmpIndDNI);
+
+    cargarOrdEnBalanceado(pa,arch,ini,med-1);
+    cargarOrdEnBalanceado(pa,arch,med+1,fin);
+}
+
+int indexarOrdenado(tArbol* pa, FILE* arch)
+{
+    size_t cantreg;
+    fseek(arch,0,SEEK_END);
+    cantreg=ftell(arch)/sizeof(tAlumno);
+    cargarOrdEnBalanceado(pa,arch,0,cantreg-1);
+    return 1;
+}
