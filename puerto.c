@@ -82,6 +82,13 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
     printf("=========================================================\n\n");
 }
 
+// ENT
+int entregarContenedor(tPuerto *puerto)
+{
+    tCamion camion;
+    tNodo *listaZonas = puerto->listaZonas;
+    tZona *zonaActual;
+    tContenedor contenedorActual;
 //DES
 int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona)
 {
@@ -143,7 +150,7 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 }
 
 //REU
-/*int reubicar(tLista *listaZonas, const char codZona)
+int reubicar(tLista *listaZonas, const char codZona)
 {
     tNodo* zonaInsertar, *zonaRetirar;
     char container[4];
@@ -157,10 +164,28 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
     return 0;
 }
-*/
 
 
 
+int  verPrimero(&puerto->colaCamiones, &camion, sizeof(tCamion));
+
+    while(listaZonas != NULL)
+    {
+        zonaActual = (tZona*)listaZonas->dato;
+        verTope(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+        if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a cami�n.s�loC�digoBuscado
+        {
+            sacarDePila(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+            sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
+            return TODO_OK;
+        }
+        else
+        {
+            listaZonas = listaZonas->sig;
+        }
+    }
+    return CONTENEDOR_NO_ENCONTRADO;
+}
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelleDato)

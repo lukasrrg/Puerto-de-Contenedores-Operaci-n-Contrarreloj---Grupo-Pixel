@@ -18,6 +18,7 @@
 #define NO_HAY_EVENTO_FUTURO 0
 //#define MUELLE_DISPONIBLE 1
 //#define MUELLE_NO_DISPONIBLE 0
+#define CONTENEDOR_NO_ENCONTRADO 51
 
 #define FIN_DE_JORNADA 0
 #define JORNADA_ACTIVA 1
@@ -36,7 +37,6 @@ typedef struct
     char codigo[TAM_COD_BUQUE];
     tCola sigContenedor;
     //tPila o tCola sigContenedor;      Decidir si se usa con pila o con cola
-} tBuque;
 } tBuque;
 
 typedef struct
@@ -64,7 +64,6 @@ typedef struct
     tPila pila;
     int capacidad;
     char codigo [TAM_COD_ZONA];
-} tZona;                            //cada zona tiene su pila, cÃ³digo de zona y capacidad
 } tZona;                            //cada zona tiene su pila, código de zona y capacidad
 
 typedef struct
@@ -99,6 +98,7 @@ typedef struct
 //COMANDOS
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
+int entregarContenedor(tPuerto *puerto); //ENT
 int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona);
 int reubicar(tLista *listaZonas, const char codZona); //REU
 
