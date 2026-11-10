@@ -1,7 +1,6 @@
 # Archivos generados por Code::Blocks
 bin/
 obj/
-*.cbp
 
 # Archivos de compilación
 *.o
