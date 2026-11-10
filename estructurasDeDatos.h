@@ -51,6 +51,8 @@ typedef struct
 
 typedef tNodo *tLista;
 typedef tNodoA* tArbol;
+typedef int (*Cmp)(const void*, const void*);
+typedef void (*Mostrar)(const void*);
 
 //Funciones Pila
 void crearPila(tPila *pl);
