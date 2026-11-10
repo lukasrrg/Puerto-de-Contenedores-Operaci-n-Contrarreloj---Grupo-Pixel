@@ -29,7 +29,7 @@ void pantallaInicial(int *estadoDeJuego)
 int ingresarNombreOperador(char *nombreDestino)
 {
     char operador[100]; // Buffer local para almacenar la entrada cruda del usuario por teclado
-    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validación
+    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validaci�n
     char *pSalto;
 
 
@@ -40,20 +40,20 @@ int ingresarNombreOperador(char *nombreDestino)
         // Se utiliza fgets para evitar desbordamientos de buffer por consola
         if (fgets(operador, sizeof(operador), stdin) != NULL)
         {
-            // Se busca el salto de línea '\n' que genera la tecla Enter
+            // Se busca el salto de l�nea '\n' que genera la tecla Enter
             pSalto = strchr(operador, '\n');
             if (pSalto)
                 *pSalto = '\0'; // Se reemplaza por terminador nulo para limpiar la cadena
 
-            // Validación 1: Verificar si el operador ingresó un string vacío (sólo presionó Enter)
+            // Validaci�n 1: Verificar si el operador ingres� un string vac�o (s�lo presion� Enter)
             if (strlen(operador) == 0)
                 printf("[ERROR] No se ingreso nombre.\n");
 
-            // Validación 2: Verificar si la longitud supera el límite permitido por la estructura tOperador
+            // Validaci�n 2: Verificar si la longitud supera el l�mite permitido por la estructura tOperador
             else if (strlen(operador) >= TAM_MAX_NOMBRE_OPERADOR)
                 printf("[ERROR] El nombre excede el limite de %d caracteres.\n", TAM_MAX_NOMBRE_OPERADOR - 1);
 
-            // Entrada válida: Se copia al parámetro de salida y se habilita el fin del ciclo
+            // Entrada v�lida: Se copia al par�metro de salida y se habilita el fin del ciclo
             else
             {
                 strcpy(nombreDestino, operador);
@@ -67,87 +67,6 @@ int ingresarNombreOperador(char *nombreDestino)
     return TODO_OK;
 }
 
-void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp)
-{
-    char comando[10];
-    //tener alguna tLista llamada listaComandos, en donde se pueda verificar si un comando esta disponible o no
-    int jornadaActiva = JORNADA_ACTIVA;
-    int hayEventoFuturo = HAY_EVENTO_FUTURO;
-
-    while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
-    {
-        //Actualizar buques y camiones para el T actual
-        hayEventoFuturo = actualizarBuquesCamiones(puerto);
-
-        printf("Comandos disponibles: ");
-        //mostrarComandosDisponibles A IMPLEMENTAR
-        printf("\n<%s> ", nombreOp);
-        scanf("%s", comando);               // Leemos el comando escrito
-        stringMayuscula(comando);           //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
-
-        system("cls");                      // Limpia toda la pantalla ANTES de mostrar el menú
-
-        //Aca habria que comparar "comando" no con todos los comandos del juego, sino solo con los comandos disponibles
-        //o sea --> buscarEnLista(comando, listaComandos, funcion de comparacion)   SI "comando" NO EXISTE EN "listaComandos" volver a pedir el ingreso del comando
-        //tambien tener en cuenta que los comandos des y reu reciben parametros
-        //tambien verificar si el tiempo de esa accion llega a entrar dentro del tiempo de la jornada
-        if (strcmp(comando, "DES") == 0)
-        {
-            puerto->tiempoActual += configuracion->tiempo_descarga_contenedor;
-            //Aumentar puntuacion
-        }
-        else if (strcmp(comando, "REU") == 0)
-        {
-            if (verificarZonas(comando,&(puerto->listaZonas)))
-            {
-                reubicar(&(puerto->listaZonas),comando);
-            }//o se puede hacer todo en una sola función
-            puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
-        }
-        else if (strcmp(comando, "ENT") == 0)
-        {
-            if(entregarContenedor(puerto) == TODO_OK)
-            {
-                puerto->tiempoActual += configuracion->tiempo_carga_camion;
-                puerto->puntuacionProvisoria += 10;
-            }
-        }
-        else if (strcmp(comando, "VER") == 0)
-        {
-            mostrarEstadoPuerto(puerto); // Llama a la función
-        }
-        else if (strcmp(comando, "ESP") == 0)
-        {
-            puerto->tiempoActual++; // ESP avanza el reloj 1 minuto
-        }
-        else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
-        {
-            jornadaActiva = FIN_DE_JORNADA;
-        }
-        else
-        {
-            printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
-        }
-
-        //Registrar la operacion realizada
-
-
-        //Actualizacion (capaz se puede hacer al principio del while)
-        //if (comandosDisponibles(puerto, listaComandos))
-//        {Hacer una lista de comandos disponibles?}
-//        else if (verificar si quedan eventos futuros o buques con contenedores o camiones esperando)
-//        {
-//            avance automatico del tiempo
-//        }
-//        else
-//        {
-//            jornadaActiva = FIN_DE_JORNADA
-//        }
-
-
-
-    }
-}
 
 //Funciones configuracion
 int obtenerValorConfiguracion(char *cadena, FILE *archivo)
@@ -174,7 +93,7 @@ int leerArchivoConfiguracion(tConfiguracion *configuracion)
 
     while (fgets(linea, sizeof(linea), archivo) != NULL)
     {
-        // Ignorar líneas vacías o comentarios
+        // Ignorar l�neas vac�as o comentarios
         if (linea[0] == '\n' || linea[0] == '\r' || linea[0] == '#')
             continue;
 
@@ -224,31 +143,31 @@ void configuracionMostrar(tConfiguracion *config)
 
 void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
 {
-    puerto->tiempoAnterior = -1;
     puerto->tiempoActual = 0;
     puerto->puntuacionProvisoria = 0;
+//    puerto->cantMuelles = configuracion->cantidad_muelles;
     crearLista(&puerto->listaMuelles);
     inicializarMuelles(&puerto->listaMuelles, configuracion->cantidad_muelles);
     crearLista(&puerto->listaZonas);
     crearCola(&puerto->colaBuques);
     crearCola(&puerto->colaCamiones);
     crearZonas(&puerto->listaZonas, configuracion->cantidad_zonas, configuracion->cap_max_pila);
-    // (Acá debería inicializar los muelles según configuracion)
+    // (Ac� deber�a inicializar los muelles seg�n configuracion)
 }
 
 void inicializarMuelles(tLista *listaMuelles, int cantidad)
 {
     int i;
     tMuelle muelleActual;
-    char codigo[TAM_COD_MUELLE];
+    char buffer[4];
 
     for (i = 1; i <= cantidad; i++)
     {
         strcpy(muelleActual.codigo, "M");
-        itoa(i, codigo, 10);
-        strcat(muelleActual.codigo, codigo);
+        itoa(i, buffer, 10);
+        strcat(muelleActual.codigo, buffer);
 
-        muelleActual.buqueActual = NULL;
+        muelleActual.disponible = MUELLE_DISPONIBLE;
 
         insertarAlFinal(listaMuelles, &muelleActual, sizeof(tMuelle));
     }
@@ -267,18 +186,6 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
         // Copia los bytes de nuevaZona dentro de la memoria del nodo de la lista
         insertarAlFinal(listaZonas, &nuevaZona, sizeof(tZona));
-    tZona *zona;
-    int i;
-    char buffer[4];
-    for (i=1;i<=cantidadZonas;i++)
-    {
-        crearPila(&(zona->pila));
-        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
-        itoa(i, buffer, 10);
-        strcpy(zona->codigo,"Z");
-        strcat(zona->codigo,buffer);
-
-        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
     }
 }
 
@@ -305,7 +212,7 @@ tNodo* localizarZona(tLista *listaZonas, const char *codZona)
         nodoActual = nodoActual->sig; // Avanza al siguiente nodo
     }
 
-    return NULL; // Recorrió toda la lista y la zona no existe
+    return NULL; // Recorri� toda la lista y la zona no existe
 }
 
 
@@ -315,76 +222,17 @@ int verificarZonas(const char *codzona, tLista *listaZonas)
     // Si devuelve NULL, la zona no existe (devuelve 0)
     if (localizarZona(listaZonas, codzona) != NULL)
     {
-        return 1; // Zona existente / válida
+        return 1; // Zona existente / v�lida
     }
 
     return 0; // Zona inexistente
 }
 
 void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario)
-tNodo* localizarZona(tLista *listaZonas, const char codZona)
-{
-    int comp;
-    tNodo* nodoActual = *listaZonas;
-    if(!(*listaZonas))
-    {
-        return NULL;
-    }
-    comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
-    while(*listaZonas || comp!=0)
-    {
-        nodoActual=nodoActual->sig;
-        comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
-    }
-
-    if(comp!=0)
-    {
-        return NULL;
-    }
-
-    return nodoActual;
-}
-
-int verificarZonas (const char codzona, tLista* listaZonas)
-{
-    //TERMINAR DE HACER (podría recorrer la lista de zonas hasta el final para verificar si existe)
-    return 1;
-}
-
-int descargar(tLista *listaZonas, const char codZona)
-{
-    char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
-                                            //esto es una version basica
-    if(!listaZonas)
-    {
-        return -1;  //esto no deberia pasar, a menos que la cantidad de zonas en config.txt sea 0
-    }
-    return 0;
-}
-
-int reubicar(tLista *listaZonas, const char codZona)
-{
-    tNodo* zonaInsertar, *zonaRetirar;
-    char container[4];
-    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
-    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
-    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
-    {
-        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
-        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
-        return 1;
-    }
-    return 0;
-}
-
-void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
 {
     char lineaComando[100];
     char comando[10];
     int continuarJornada = 1;
-
-    // Primer chequeo e impresión inicial o inicio del reloj T=0
-    printf("\n=== INICIO DE LA JORNADA OPERATIVA (T = %d) ===\n", puerto->tiempoActual);
 
     while (continuarJornada && puerto->tiempoActual < config->duracion_jornada_minutos)
     {
@@ -468,27 +316,6 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
                     fflush(stdin);
                     getchar();
                 }
-            // Extraemos únicamente el primer código de operación (ej: DES, REU, ENT, VER, ESP)
-            sscanf(lineaComando, "%s", comando);
-
-            // =========================================================
-            // AQUÍ UBICÁS EL CHEQUEO DEL COMANDO "VER"
-            // =========================================================
-            if (strcmp(comando, "VER") == 0)
-            {
-                mostrarEstadoPuerto(puerto); // Muestra muelles, zonas, ventana y NO consume tiempo T
-            }
-            else if (strcmp(comando, "DES") == 0)
-            {
-                // TODO: Lógica para Descargar y Almacenar (DES  )
-            }
-            else if (strcmp(comando, "REU") == 0)
-            {
-                // TODO: Lógica para Reubicar contenedor (REU  )
-            }
-            else if (strcmp(comando, "ENT") == 0)
-            {
-                // TODO: Lógica para Entregar contenedor al camión (ENT)
             }
         }
     }
@@ -519,7 +346,7 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
         if (linea[0] == '[' || linea[0] == '\n' || linea[0] == '\r')
             continue;
 
-        // 1. CAMIONES (Líneas que empiezan con 'K')
+        // 1. CAMIONES (L�neas que empiezan con 'K')
         if (linea[0] == 'K')
         {
             tCamion nuevoCamion;
@@ -535,7 +362,7 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
                 }
             }
         }
-        // 2. BUQUES (Líneas que empiezan con 'B')
+        // 2. BUQUES (L�neas que empiezan con 'B')
         else if (linea[0] == 'B')
         {
             tBuque nuevoBuque;

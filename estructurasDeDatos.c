@@ -26,7 +26,7 @@ int ponerEnPila(tPila *pl, const void *dato, unsigned cantBytes)
     if (pl->tope < cantBytes + sizeof(cantBytes))        //Verifico que todavia quede espacio en la pila
         return ERROR_PILA_LLENA;
 
-    pl->tope -= cantBytes;                         //Guardo el tamaño del dato
+    pl->tope -= cantBytes;                         //Guardo el tamaÃ±o del dato
     memcpy(pl->pila + pl->tope, dato, cantBytes);
     pl->tope -= sizeof(unsigned);            //Guardo el dato
     memcpy(pl->pila + pl->tope, &cantBytes, sizeof(unsigned));
@@ -41,7 +41,7 @@ int sacarDePila(tPila *pl, void *buffer, unsigned cantBytes)
 
     unsigned tamDato;
 
-    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
+    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaÃ±o del dato
     pl->tope += sizeof(unsigned);
 
     memcpy(buffer, pl->pila + pl->tope, minimo(tamDato, cantBytes));             //Recupero el dato
@@ -57,7 +57,7 @@ int verTope(const tPila *pl, void *buffer, unsigned cantBytes)
 
     unsigned tamDato;
 
-    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
+    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaÃ±o del dato
 
     memcpy(buffer, pl->pila + pl->tope + sizeof(unsigned), minimo(tamDato, cantBytes));             //Recupero el dato
 
@@ -151,7 +151,7 @@ void vaciarCola(tCola *pc)
 {
     tNodo *nodoActual = pc->pri;
 
-    while (nodoActual != NULL)  //Mientras nodoActual siga señalando a algo...
+    while (nodoActual != NULL)  //Mientras nodoActual siga seÃ±alando a algo...
     {
         pc->pri = nodoActual->sig;  //Guardo el siguiente elemento en pri
         free(nodoActual->dato);     //Libero el dato
@@ -174,7 +174,7 @@ void vaciarLista(tLista *pl)
     while(*pl != NULL)
     {
         elim = *pl; // Guardamos la referencia al nodo actual
-        free(elim->dato); // Liberamos el dato reservado dinámicamente
+        free(elim->dato); // Liberamos el dato reservado dinÃ¡micamente
         free(elim); // Liberamos el nodo
         pl = &(*pl)->sig; // Avanzamos el puntero de la lista al siguiente
     }
@@ -302,208 +302,22 @@ int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void 
 
 int mostrarLista(const tLista *pl, void (*muestra)(const void *dato))
 {
-    if (*pl == NULL)
+    const tNodo *nodoActual = *pl;
+
+    if (nodoActual == NULL)
         return ERROR_LISTA_VACIA;
     else
         do
         {
-            muestra((*pl)->dato);
+            muestra(nodoActual->dato);
 
-            pl = &(*pl)->sig;
-        } while(*pl != NULL);
+            nodoActual = nodoActual->sig;
+        } while(nodoActual != NULL);
 
     return TODO_OK;
 }
 
-int buscarEnLista(const tLista *pl, const void *buscado, void *devolver, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *dato, void *devolucion))
-{
-    while (*pl != NULL)
-    {
-        if (cmp((*pl)->dato, buscado) == HAY_OCURRENCIA)
-        {
-            accion((*pl)->dato, devolver);
-
-            return ELEM_ENCONTRADO;
-        }
-
-        pl = &(*pl)->sig;
-    }
-
-    return ELEM_NO_ENCONTRADO;
-}
-
-
-//Funciones Arbol
-
-void crearArbol(tArbol* pa)
-{
-    *pa=NULL;
-}
-
-void recorrerInorden(tArbol* pa, Mostrar mostrar)
-{
-    if(*pa==NULL)
-    {
-        return;
-    }
-    recorrerInorden(&(*pa)->izq,mostrar);
-    mostrar((*pa)->dato);
-    recorrerInorden(&(*pa)->der,mostrar);
-}
-
-int insertarEnArbol(tArbol* pa, void* dato, unsigned tam, Cmp cmp)
-{
-    tNodoA* nue;
-    if (*pa==NULL)
-    {
-        nue=(tNodoA*)malloc(sizeof(tNodoA));
-        nue->dato=malloc(tam);
-        if(nue==NULL || nue->dato==NULL)
-        {
-            free(nue);
-            return SIN_MEMORIA;
-        }
-        memcpy(nue->dato,dato,tam);
-        nue->tam=tam;
-        nue->der=NULL;
-        nue->izq=NULL;
-        *pa=nue;
-
-        return INSERTADO;
-    }
-    if(cmp((*pa)->dato,dato)>0)
-    {
-        return insertarEnArbol(&(*pa)->izq, dato, tam, cmp);
-    }
-    if(cmp((*pa)->dato,dato)<0)
-    {
-        return insertarEnArbol(&(*pa)->der, dato, tam, cmp);
-    }
-    return DUPLICADO;
-}
-
-int altura (tArbol* pa)
-{
-    int hi, hd;
-    if(!*pa)
-    {
-        return 0;
-    }
-    hi = altura(&(*pa)->izq);
-    hd = altura(&(*pa)->der);
-    return (hi>hd? hi:hd) +1;
-}
-
-tNodoA** buscarClave(tArbol* pa,const void* clave, Cmp cmp)
-{
-    int comp;
-
-    while ((*pa) && (comp=cmp(clave,(*pa)->dato)))
-    {
-        if (comp>0)
-        {
-            pa = &(*pa)->der;
-        }
-        else
-        {
-            pa = &(*pa)->izq;
-        }
-    }
-    if(!*pa)
-    {
-        return NULL;
-    }
-
-    return (tNodoA**)pa;
-}
-
-tNodoA** buscarMenor(tArbol* pa)
-{
-    if(*pa==NULL)
-    {
-        return NULL;
-    }
-    while((*pa)->izq!=NULL)
-    {
-        pa=&(*pa)->izq;
-    }
-    return (tNodoA**)pa;
-}
-
-tNodoA** buscarMayor(tArbol* pa)
-{
-    if(*pa==NULL)
-    {
-        return NULL;
-    }
-    while((*pa)->der!=NULL)
-    {
-        pa=&(*pa)->der;
-    }
-    return (tNodoA**)pa;
-}
-
-int eliminarRaiz(tArbol* pa)
-{
-    tNodoA **remp, *elim;
-    if(!*pa)
-    {
-        return 0;
-    }
-
-    free((*pa)->dato);
-    if(!(*pa)->izq && !(*pa)->der)
-    {
-        free(*pa);
-        *pa=NULL;
-        return 1;
-    }
-
-    remp = altura(&(*pa)->izq) > altura(&(*pa)->der) ? buscarMayor(&(*pa)->izq) : buscarMenor(&(*pa)->der);
-    elim = *remp;
-    (*pa)->dato = elim->dato;
-    (*pa)->tam = elim->tam;
-    *remp = elim->izq ? elim->izq : elim->der;
-    free(elim);
-
-    return 1;
-}
-
-int eliminarPorClave(tArbol* pa,void* clave, unsigned tam, Cmp cmp)
-{
-    if(!(pa=buscarClave(pa,clave,cmp)))
-    {
-        return 0;
-    }
-    memcpy(clave,(*pa)->dato,MINIMO((*pa)->tam,tam));
-    return eliminarRaiz(pa);
-}
-
-void cargarOrdEnBalanceado(tArbol* pa, FILE* arch, int ini, int fin)
-{
-    size_t med = (ini+fin)/2;
-    tIndice ind;
-    tAlumno alum;
-    if(ini>fin)
-    {
-        return;
-    }
-    fseek(arch,med*sizeof(tAlumno),SEEK_SET);
-    fread(&alum,sizeof(tAlumno),1,arch);
-    ind.clave=alum.codAlum;
-    ind.indiceReg=med;
-
-    insertarEnArbol(pa,&ind,sizeof(tIndice),cmpIndDNI);
-
-    cargarOrdEnBalanceado(pa,arch,ini,med-1);
-    cargarOrdEnBalanceado(pa,arch,med+1,fin);
-}
-
-int indexarOrdenado(tArbol* pa, FILE* arch)
-{
-    size_t cantreg;
-    fseek(arch,0,SEEK_END);
-    cantreg=ftell(arch)/sizeof(tAlumno);
-    cargarOrdEnBalanceado(pa,arch,0,cantreg-1);
-    return 1;
-}
+//int buscarEnLista(const void *dato, const void *lista, funcion de comparacion)
+//{
+//
+//}

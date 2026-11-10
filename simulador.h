@@ -4,8 +4,6 @@
 #include "estructurasDeDatos.h"
 
 //typedef struct tPuerto tPuerto;
-#include "puerto.h"
-#include "estructurasDeDatos.h"
 
 //Estados de juego
 #define PANTALLA_INICIAL -1
@@ -17,9 +15,7 @@
 #define OPCION_NO_VALIDA 0
 
 #define LONG_VALOR_CONFIG 4
-
-
-
+#define ARCHIVO_NO_ENCONTRADO 789
 
 
 typedef struct
@@ -38,7 +34,7 @@ typedef struct
 
 #include "puerto.h" //Este include es para que tome tConfiguracion en puerto (No mover)
 
-//typedef int (Cmp*)(const void*, const void*);    pensÃ© en usarlo para cmpCodZona, pero por ahora no lo veo necesario
+//typedef int (Cmp*)(const void*, const void*);    pensé en usarlo para cmpCodZona, pero por ahora no lo veo necesario
 
 //Pantallas de juego
 void pantallaInicial(int *estadoDeJuego);
@@ -58,10 +54,6 @@ void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEs
 tNodo* localizarZona(tLista *listaZonas, const char *codZona);
 int verificarZonas(const char *codzona, tLista *listaZonas);
 int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto);
-tLista* localizarZona(tLista *listaZonas, const char codZona);
-int descargar(tLista *listaZonas, const char codZona);
-int reubicar(tLista *listaZonas, const char codZona1, const char codZona2);
-
 
 //Funciones auxiliares
 void stringMayuscula(char *str);
