@@ -26,7 +26,7 @@ int ponerEnPila(tPila *pl, const void *dato, unsigned cantBytes)
     if (pl->tope < cantBytes + sizeof(cantBytes))        //Verifico que todavia quede espacio en la pila
         return ERROR_PILA_LLENA;
 
-    pl->tope -= cantBytes;                         //Guardo el tamaño del dato
+    pl->tope -= cantBytes;                         //Guardo el tamaÃ±o del dato
     memcpy(pl->pila + pl->tope, dato, cantBytes);
     pl->tope -= sizeof(unsigned);            //Guardo el dato
     memcpy(pl->pila + pl->tope, &cantBytes, sizeof(unsigned));
@@ -41,7 +41,7 @@ int sacarDePila(tPila *pl, void *buffer, unsigned cantBytes)
 
     unsigned tamDato;
 
-    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
+    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaÃ±o del dato
     pl->tope += sizeof(unsigned);
 
     memcpy(buffer, pl->pila + pl->tope, minimo(tamDato, cantBytes));             //Recupero el dato
@@ -57,7 +57,7 @@ int verTope(const tPila *pl, void *buffer, unsigned cantBytes)
 
     unsigned tamDato;
 
-    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
+    memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaÃ±o del dato
 
     memcpy(buffer, pl->pila + pl->tope + sizeof(unsigned), minimo(tamDato, cantBytes));             //Recupero el dato
 
@@ -151,7 +151,7 @@ void vaciarCola(tCola *pc)
 {
     tNodo *nodoActual = pc->pri;
 
-    while (nodoActual != NULL)  //Mientras nodoActual siga señalando a algo...
+    while (nodoActual != NULL)  //Mientras nodoActual siga seÃ±alando a algo...
     {
         pc->pri = nodoActual->sig;  //Guardo el siguiente elemento en pri
         free(nodoActual->dato);     //Libero el dato
@@ -174,7 +174,7 @@ void vaciarLista(tLista *pl)
     while(*pl != NULL)
     {
         elim = *pl; // Guardamos la referencia al nodo actual
-        free(elim->dato); // Liberamos el dato reservado dinámicamente
+        free(elim->dato); // Liberamos el dato reservado dinÃ¡micamente
         free(elim); // Liberamos el nodo
         pl = &(*pl)->sig; // Avanzamos el puntero de la lista al siguiente
     }

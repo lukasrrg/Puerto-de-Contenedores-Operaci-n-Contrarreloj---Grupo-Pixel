@@ -46,7 +46,7 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
         {
             zona = (tZona *)nodoZonaActual->dato;
 
-            // Como tZona no tiene una Pila en el .h, solo imprimimos su código.
+            // Como tZona no tiene una Pila en el .h, solo imprimimos su cï¿½digo.
             printf("  - Zona %s\n", zona->codigo);
 
             nodoZonaActual = nodoZonaActual->sig;
@@ -80,6 +80,34 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
         }
     }
     printf("=========================================================\n\n");
+}
+
+// ENT
+int entregarContenedor(tPuerto *puerto)
+{
+    tCamion camion;
+    tNodo *listaZonas = puerto->listaZonas;
+    tZona *zonaActual;
+    tContenedor contenedorActual;
+
+    verPrimero(&puerto->colaCamiones, &camion, sizeof(tCamion));
+
+    while(listaZonas != NULL)
+    {
+        zonaActual = (tZona*)listaZonas->dato;
+        verTope(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+        if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a camiï¿½n.sï¿½loCï¿½digoBuscado
+        {
+            sacarDePila(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+            sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
+            return TODO_OK;
+        }
+        else
+        {
+            listaZonas = listaZonas->sig;
+        }
+    }
+    return CONTENEDOR_NO_ENCONTRADO;
 }
 
 //DES
@@ -143,7 +171,7 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 }
 
 //REU
-/*int reubicar(tLista *listaZonas, const char codZona)
+int reubicar(tLista *listaZonas, const char codZona)
 {
     tNodo* zonaInsertar, *zonaRetirar;
     char container[4];
@@ -151,8 +179,10 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
     if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
     {
-        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
-        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
+        sacarDePila(&((*tZona)zonaRetirar->dato)->pila,container,sizeof(container));
+        ponerEnPila(&((*tZona)zonaInsertar->dato)->pila,container,sizeof(container));
+        ((*tZona)zonaRetirar->dato)->capacidad++;
+        ((*tZona)zonaInsertar->dato)->capacidad--;
         return 1;
     }
     return 0;

@@ -29,7 +29,7 @@ void pantallaInicial(int *estadoDeJuego)
 int ingresarNombreOperador(char *nombreDestino)
 {
     char operador[100]; // Buffer local para almacenar la entrada cruda del usuario por teclado
-    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validación
+    int esValido = OPCION_NO_VALIDA; // Flag de control del ciclo de validaciï¿½n
     char *pSalto;
 
 
@@ -40,20 +40,20 @@ int ingresarNombreOperador(char *nombreDestino)
         // Se utiliza fgets para evitar desbordamientos de buffer por consola
         if (fgets(operador, sizeof(operador), stdin) != NULL)
         {
-            // Se busca el salto de línea '\n' que genera la tecla Enter
+            // Se busca el salto de lï¿½nea '\n' que genera la tecla Enter
             pSalto = strchr(operador, '\n');
             if (pSalto)
                 *pSalto = '\0'; // Se reemplaza por terminador nulo para limpiar la cadena
 
-            // Validación 1: Verificar si el operador ingresó un string vacío (sólo presionó Enter)
+            // Validaciï¿½n 1: Verificar si el operador ingresï¿½ un string vacï¿½o (sï¿½lo presionï¿½ Enter)
             if (strlen(operador) == 0)
                 printf("[ERROR] No se ingreso nombre.\n");
 
-            // Validación 2: Verificar si la longitud supera el límite permitido por la estructura tOperador
+            // Validaciï¿½n 2: Verificar si la longitud supera el lï¿½mite permitido por la estructura tOperador
             else if (strlen(operador) >= TAM_MAX_NOMBRE_OPERADOR)
                 printf("[ERROR] El nombre excede el limite de %d caracteres.\n", TAM_MAX_NOMBRE_OPERADOR - 1);
 
-            // Entrada válida: Se copia al parámetro de salida y se habilita el fin del ciclo
+            // Entrada vï¿½lida: Se copia al parï¿½metro de salida y se habilita el fin del ciclo
             else
             {
                 strcpy(nombreDestino, operador);
@@ -93,7 +93,7 @@ int leerArchivoConfiguracion(tConfiguracion *configuracion)
 
     while (fgets(linea, sizeof(linea), archivo) != NULL)
     {
-        // Ignorar líneas vacías o comentarios
+        // Ignorar lï¿½neas vacï¿½as o comentarios
         if (linea[0] == '\n' || linea[0] == '\r' || linea[0] == '#')
             continue;
 
@@ -152,7 +152,7 @@ void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
     crearCola(&puerto->colaBuques);
     crearCola(&puerto->colaCamiones);
     crearZonas(&puerto->listaZonas, configuracion->cantidad_zonas, configuracion->cap_max_pila);
-    // (Acá debería inicializar los muelles según configuracion)
+    // (Acï¿½ deberï¿½a inicializar los muelles segï¿½n configuracion)
 }
 
 void inicializarMuelles(tLista *listaMuelles, int cantidad)
@@ -212,7 +212,7 @@ tNodo* localizarZona(tLista *listaZonas, const char *codZona)
         nodoActual = nodoActual->sig; // Avanza al siguiente nodo
     }
 
-    return NULL; // Recorrió toda la lista y la zona no existe
+    return NULL; // Recorriï¿½ toda la lista y la zona no existe
 }
 
 
@@ -222,7 +222,7 @@ int verificarZonas(const char *codzona, tLista *listaZonas)
     // Si devuelve NULL, la zona no existe (devuelve 0)
     if (localizarZona(listaZonas, codzona) != NULL)
     {
-        return 1; // Zona existente / válida
+        return 1; // Zona existente / vï¿½lida
     }
 
     return 0; // Zona inexistente
@@ -346,7 +346,7 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
         if (linea[0] == '[' || linea[0] == '\n' || linea[0] == '\r')
             continue;
 
-        // 1. CAMIONES (Líneas que empiezan con 'K')
+        // 1. CAMIONES (Lï¿½neas que empiezan con 'K')
         if (linea[0] == 'K')
         {
             tCamion nuevoCamion;
@@ -362,7 +362,7 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
                 }
             }
         }
-        // 2. BUQUES (Líneas que empiezan con 'B')
+        // 2. BUQUES (Lï¿½neas que empiezan con 'B')
         else if (linea[0] == 'B')
         {
             tBuque nuevoBuque;
