@@ -77,6 +77,7 @@ typedef struct
     tCola colaBuques;
     tLista listaZonas;      // Lista dinÃ¡mica de Zonas (donde cada zona tiene una tPila)
     tCola colaCamiones;
+    int operacionesRealizadas;
 } tPuerto;                   //Variables de la partida en una sola estructura
 
 typedef struct
@@ -93,7 +94,7 @@ typedef struct
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 int entregarContenedor(tPuerto *puerto); //ENT
 int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona);//DES
-int reubicar(tLista *listaZonas, const char codZona); //REU
+int reubicar(tLista *listaZonas, const char *codZonaOrigen, const char *codZonaDestino); //REU
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelle);
@@ -103,5 +104,6 @@ int procesarLineaPuerto(char *linea, tPuerto *puerto);      //Devuelve HAY_EVENT
 int muelleDisponible(const void *muelleDato, const void *nulo);
 void devolverMuelle(void *dato, void *destino);
 void atracarBuque(tMuelle *muelle, tBuque *buque);
+void liberarMemoriaPuerto(tPuerto *puerto);
 
 #endif // PUERTO_H_INCLUDED

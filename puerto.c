@@ -25,8 +25,18 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
 
     // 1. Mostrar Muelles
     printf(" MUELLES\n");
-    //Mostrar lista de muelles
-    mostrarLista(&puerto->listaMuelles, mostrarMuelle);
+    for (int i = 0; i < puerto->cantMuelles; i++)
+    {
+        printf("  - Muelle %s: ", puerto->muelles[i].codigo);
+        if (puerto->muelles[i].disponible == 1)
+        {
+            printf("Disponible\n");
+        }
+        else
+        {
+            printf("Ocupado por Buque %s\n", puerto->muelles[i].buqueAtracado.codigo);
+        }
+    }
     printf("  Buques esperando en cola: %s\n", colaVacia(&puerto->colaBuques) ? "Ninguno" : "Si");
 
     // 2. Mostrar Zonas de Almacenamiento
@@ -42,14 +52,28 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
         while (nodoZonaActual != NULL)
         {
             zona = (tZona *)nodoZonaActual->dato;
+            tContenedor topeCont;
+            memset(&topeCont, 0, sizeof(tContenedor));
 
-            // Como tZona no tiene una Pila en el .h, solo imprimimos su código.
-            printf("  - Zona %s\n", zona->codigo);
+            printf("  - Zona %s: ", zona->codigo);
+
+            // Verificamos si la pila de la zona tiene contenedores o esta vacia
+            if (pilaVacia(&zona->pila))
+            {
+                printf("[Vacia]\n");
+            }
+            else if (verTope(&zona->pila, &topeCont, sizeof(tContenedor)) == TODO_OK)
+            {
+                printf("Tope -> [%s]\n", topeCont.codigo);
+            }
+            else
+            {
+                printf("[Vacia]\n");
+            }
 
             nodoZonaActual = nodoZonaActual->sig;
         }
     }
-
     // 3. Ventana de Planificacion (Hasta 3 camiones sin alterar la Cola)
     printf("\n VENTANA DE PLANIFICACION - CAMIONES EN ESPERA\n");
     if (colaVacia(&puerto->colaCamiones))
@@ -87,22 +111,29 @@ int entregarContenedor(tPuerto *puerto)
     tZona *zonaActual;
     tContenedor contenedorActual;
 
+    if (colaVacia(&puerto->colaCamiones))
+    {
+        return CONTENEDOR_NO_ENCONTRADO;
+    }
+
     verPrimero(&puerto->colaCamiones, &camion, sizeof(tCamion));
 
     while(listaZonas != NULL)
     {
         zonaActual = (tZona*)listaZonas->dato;
-        verTope(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
-        if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a cami�n.s�loC�digoBuscado
+        if (!pilaVacia(&zonaActual->pila))
         {
-            sacarDePila(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
-            sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
-            return TODO_OK;
+            if (verTope(&zonaActual->pila, &contenedorActual, sizeof(tContenedor)) == TODO_OK)
+            {
+                if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a cami�n.s�loC�digoBuscado
+                {
+                    sacarDePila(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
+                    sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
+                    return TODO_OK;
+                }
+            }
         }
-        else
-        {
-            listaZonas = listaZonas->sig;
-        }
+        listaZonas = listaZonas->sig;
     }
     return CONTENEDOR_NO_ENCONTRADO;
 }
@@ -112,9 +143,6 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 {
     // 1. Buscar el muelle ingresado
     int idxMuelle = -1;
-    tNodo *nodoZona;
-    tZona *zonaDestino;
-    tContenedor contenedorExtraido;
     for (int i = 0; i < puerto->cantMuelles; i++)
     {
         if (strcmp(puerto->muelles[i].codigo, codMuelle) == 0)
@@ -131,14 +159,14 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
 
     // 2. Localizar la zona destino
-    nodoZona = localizarZona(&puerto->listaZonas, codZona);
+    tNodo *nodoZona = localizarZona(&puerto->listaZonas, codZona);
     if (nodoZona == NULL)
     {
         printf("\n[ERROR] La zona %s no existe.\n", codZona);
         return OPCION_NO_VALIDA;
     }
 
-    zonaDestino = (tZona *)nodoZona->dato;
+    tZona *zonaDestino = (tZona *)nodoZona->dato;
 
     // 3. Validar capacidad de la pila de la zona
     if (pilaLlena(&zonaDestino->pila, sizeof(tContenedor)))
@@ -147,7 +175,8 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
         return OPCION_NO_VALIDA;
     }
 
-    // 4. Extraer el contenedor de la cola del buque
+    // 4. Extraer el contenedor de la cola del buque atracado
+    tContenedor contenedorExtraido;
     memset(&contenedorExtraido, 0, sizeof(tContenedor));
 
     if (sacarDeCola(&puerto->muelles[idxMuelle].buqueAtracado.sigContenedor, &contenedorExtraido, sizeof(tContenedor)) != TODO_OK)
@@ -159,33 +188,82 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     // 5. Apilar en la zona destino
     ponerEnPila(&zonaDestino->pila, &contenedorExtraido, sizeof(tContenedor));
 
-    // 6. Avanzar reloj T
+    // 6. Avanzar reloj T y sumar operacion
     puerto->tiempoActual += config->tiempo_descarga_contenedor;
+    puerto->operacionesRealizadas++;
 
     printf("\n -> [DESCARGA OK] Contenedor %s descargado de %s a Zona %s (+%d min -> T=%d min).\n",
            contenedorExtraido.codigo, codMuelle, codZona,
            config->tiempo_descarga_contenedor, puerto->tiempoActual);
 
+    // =========================================================================
+    // OPCIÓN B: CHEQUEO DE ZARPE AUTOMÁTICO Y ATRACO DEL SIGUIENTE BUQUE EN COLA
+    // =========================================================================
+    if (colaVacia(&puerto->muelles[idxMuelle].buqueAtracado.sigContenedor))
+    {
+        printf(" -> [ZARPE] El Buque %s completo su descarga y zarpo del Muelle %s.\n",
+               puerto->muelles[idxMuelle].buqueAtracado.codigo, codMuelle);
+
+        puerto->muelles[idxMuelle].disponible = 1; // Muelle Libre
+
+        // Si habia barcos esperando en la cola general, atraca inmediatamente el siguiente
+        if (!colaVacia(&puerto->colaBuques))
+        {
+            tBuque buqueSiguiente;
+            memset(&buqueSiguiente, 0, sizeof(tBuque));
+
+            if (sacarDeCola(&puerto->colaBuques, &buqueSiguiente, sizeof(tBuque)) == TODO_OK)
+            {
+                puerto->muelles[idxMuelle].disponible = 0; // Ocupado
+                puerto->muelles[idxMuelle].buqueAtracado = buqueSiguiente;
+
+                printf(" -> [ATRACO AUTOMATICO] El Buque %s salio de la cola y atraco en Muelle %s.\n",
+                       buqueSiguiente.codigo, codMuelle);
+            }
+        }
+    }
+
     return TODO_OK;
 }
 
 //REU
-/*int reubicar(tLista *listaZonas, const char codZona)
+int reubicar(tLista *listaZonas, const char *codZonaOrigen, const char *codZonaDestino)
 {
-    tNodo* zonaInsertar, *zonaRetirar;
-    char container[4];
-    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
-    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
-    if (((*tZona)zonaInsertar->dato->capacidad) > 0 && pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    tNodo *nodoRetirar = localizarZona(listaZonas, codZonaOrigen);
+    tNodo *nodoInsertar = localizarZona(listaZonas, codZonaDestino);
+
+    tZona *zRetirar = (tZona *)nodoRetirar->dato;
+    tZona *zInsertar = (tZona *)nodoInsertar->dato;
+
+    tContenedor container;
+
+    if (nodoRetirar == NULL || nodoInsertar == NULL)
     {
-        sacarDePila(&((*tZona)zonaRetirar->dato)->pila,container,sizeof(container));
-        ponerEnPila(&((*tZona)zonaInsertar->dato)->pila,container,sizeof(container));
-        ((*tZona)zonaRetirar->dato)->capacidad++;
-        ((*tZona)zonaInsertar->dato)->capacidad--;
-        return 1;
+        printf("\n[ERROR] Una o ambas zonas no existen.\n");
+        return OPCION_NO_VALIDA;
     }
-    return 0;
-}*/
+
+    if (pilaVacia(&zRetirar->pila))
+    {
+        printf("\n[ERROR] La zona de origen %s esta vacia.\n", codZonaOrigen);
+        return OPCION_NO_VALIDA;
+    }
+
+    if (pilaLlena(&zInsertar->pila, sizeof(tContenedor)))
+    {
+        printf("\n[ERROR] La zona de destino %s esta llena.\n", codZonaDestino);
+        return OPCION_NO_VALIDA;
+    }
+
+    if (sacarDePila(&zRetirar->pila, &container, sizeof(tContenedor)) == TODO_OK)
+    {
+        ponerEnPila(&zInsertar->pila, &container, sizeof(tContenedor));
+        zRetirar->capacidad++;
+        zInsertar->capacidad--;
+        return TODO_OK;
+    }
+    return OPCION_NO_VALIDA;
+}
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelleDato)
@@ -340,4 +418,31 @@ void atracarBuque(tMuelle *muelle, tBuque *buque)
 {
     muelle->disponible = 0;
     muelle->buqueAtracado = *buque;
+}
+
+void liberarMemoriaPuerto(tPuerto *puerto)
+{
+    // 1. Liberar pilas de contenedores de cada zona y la lista de zonas
+    tNodo *nodoZona = puerto->listaZonas;
+    while (nodoZona != NULL)
+    {
+        tZona *z = (tZona *)nodoZona->dato;
+        vaciarPila(&z->pila); // Vacía los contenedores apilados
+        nodoZona = nodoZona->sig;
+    }
+    vaciarLista(&puerto->listaZonas);
+
+    // 2. Liberar contenedores pendientes dentro de los buques en cola
+    while (!colaVacia(&puerto->colaBuques))
+    {
+        tBuque b;
+        sacarDeCola(&puerto->colaBuques, &b, sizeof(tBuque));
+        vaciarCola(&b.sigContenedor); // Vacía la cola interna de contenedores del buque
+    }
+    vaciarCola(&puerto->colaBuques);
+
+    // 3. Liberar cola de camiones
+    vaciarCola(&puerto->colaCamiones);
+
+    printf("\n[INFO] Memoria del puerto liberada correctamente en su totalidad.\n");
 }

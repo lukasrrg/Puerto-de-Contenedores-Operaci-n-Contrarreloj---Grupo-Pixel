@@ -67,22 +67,27 @@ int ingresarNombreOperador(char *nombreDestino)
     return TODO_OK;
 }
 
-void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp)
+void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp, tArbol *arbolEstadisticas)
 {
     char lineaComando[100];
     char comando[10];
     int jornadaActiva = JORNADA_ACTIVA;
-    int hayEventoFuturo = HAY_EVENTO_FUTURO;
+
+    FILE *archEscenario = fopen("puerto.txt", "rt");
 
     while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
     {
-        system("cls");
+        system("cls"); // Limpia la consola al inicio de cada turno
 
-        // Actualizar buques y camiones usando la funcion de tu compañero
-        hayEventoFuturo = actualizarBuquesCamiones(puerto);
-        (void)hayEventoFuturo; // Evita warning de variable no usada
+        printf("=== MINUTO ACTUAL T = %d min ===\n", puerto->tiempoActual);
 
-        printf("\n<%s> ", nombreOp);
+        // 1. Procesar los arribos del minuto T actual desde puerto.txt
+        if (archEscenario != NULL)
+        {
+            procesarArribosDelMinuto(archEscenario, puerto);
+        }
+
+        printf("\n<%s> OPERADOR> ", nombreOp);
 
         if (fgets(lineaComando, sizeof(lineaComando), stdin) != NULL)
         {
@@ -112,14 +117,14 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
                     }
                     else
                     {
-                        printf("\n[ERROR] Sintaxis incorrecta. Uso: DES <muelle> <zona>\n");
+                        printf("\n[ERROR] Sintaxis incorrecta. Uso: DES <muelle> <zona> (Ej: DES M1 Z1)\n");
                     }
                     printf("\nPresione Enter para continuar...");
                     fflush(stdin);
                     getchar();
                 }
                 // REU
-                /*else if (strcmp(comando, "REU") == 0)
+                else if (strcmp(comando, "REU") == 0)
                 {
                     char codZonaOrig[TAM_COD_ZONA];
                     char codZonaDest[TAM_COD_ZONA];
@@ -131,16 +136,18 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
                         if (reubicar(&puerto->listaZonas, codZonaOrig, codZonaDest) == TODO_OK)
                         {
                             puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
+                            printf("\n -> [REUBICACION OK] Contenedor movido de %s a %s (+%d min -> T=%d min).\n",
+                                   codZonaOrig, codZonaDest, configuracion->tiempo_reubicacion_contenedor, puerto->tiempoActual);
                         }
                     }
                     else
                     {
-                        printf("\n[ERROR] Sintaxis incorrecta. Uso: REU <zonaOrigen> <zonaDestino>\n");
+                        printf("\n[ERROR] Sintaxis incorrecta. Uso: REU <zonaOrigen> <zonaDestino> (Ej: REU Z1 Z2)\n");
                     }
                     printf("\nPresione Enter para continuar...");
                     fflush(stdin);
                     getchar();
-                }*/
+                }
                 // ENT
                 else if (strcmp(comando, "ENT") == 0)
                 {
@@ -148,6 +155,7 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
                     {
                         puerto->tiempoActual += configuracion->tiempo_carga_camion;
                         puerto->puntuacionProvisoria += 10;
+                        printf("\n -> [ENTREGA OK] Contenedor entregado al camion (+10 pts | T=%d min).\n", puerto->tiempoActual);
                     }
                     else
                     {
@@ -160,7 +168,7 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
                 // ESP
                 else if (strcmp(comando, "ESP") == 0)
                 {
-                    puerto->tiempoActual++;
+                    puerto->tiempoActual++; // Avanza el reloj 1 minuto
                 }
                 // SALIR
                 else if (strcmp(comando, "SALIR") == 0)
@@ -169,22 +177,30 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
                 }
                 else
                 {
-                    printf("\n[ERROR] Comando no reconocido.\n");
+                    printf("\n[ERROR] Comando no reconocido. Intente VER, DES, REU, ENT, ESP o SALIR.\n");
                     printf("\nPresione Enter para continuar...");
                     fflush(stdin);
                     getchar();
                 }
             }
         }
-
-        if (puerto->tiempoActual >= configuracion->duracion_jornada_minutos)
-        {
-            printf("\n=== TIEMPO LIMITE ALCANZADO: FIN DE LA JORNADA (T = %d min) ===\n", puerto->tiempoActual);
-            printf("\nPresione Enter para volver al menu principal...");
-            fflush(stdin);
-            getchar();
-        }
     }
+
+    if (archEscenario != NULL)
+    {
+        fclose(archEscenario);
+    }
+
+    // =========================================================================
+    // CIERRE AUTOMÁTICO INDEPENDIENTEMENTE DE CÓMO HAYA TERMINADO LA JORNADA
+    // =========================================================================
+    if (puerto->tiempoActual >= configuracion->duracion_jornada_minutos)
+    {
+        printf("\n=== TIEMPO LIMITE ALCANZADO: FIN DE LA JORNADA (T = %d min) ===\n", puerto->tiempoActual);
+    }
+
+    // Ejecuta la finalización, guarda estadísticas y genera operadores.txt y operadores.dat
+    finalizarJornada(puerto, arbolEstadisticas, nombreOp);
 }
 
 void mostrarPantallaEstadisticas(void)
@@ -221,34 +237,25 @@ void mostrarPantallaEstadisticas(void)
     getchar();
 }
 
-void actualizarEstadisticasOperador(const char *nombreOp, int puntajeObtenido)
+void actualizarEstadisticasOperador(tArbol *pa, const char *nombreOp, int puntajeObtenido)
 {
-    tArbol arbolOps;
-    crearArbol(&arbolOps);
+    if (pa == NULL || nombreOp == NULL)
+        return;
 
-    // 1. Cargar datos existentes desde operadores.dat
-    FILE *archLectura = fopen("operadores.dat", "rb");
-    if (archLectura != NULL)
-    {
-        tOperador opBuffer;
-        while (fread(&opBuffer, sizeof(tOperador), 1, archLectura) == 1)
-        {
-            insertarEnArbol(&arbolOps, &opBuffer, sizeof(tOperador), cmpOperadorNombre);
-        }
-        fclose(archLectura);
-    }
-
-    // 2. Buscar si el operador ya existía en el árbol
+    // 1. Armar la clave de búsqueda con el nombre del operador
     tOperador claveBusqueda;
+    memset(&claveBusqueda, 0, sizeof(tOperador));
     strncpy(claveBusqueda.nombre, nombreOp, sizeof(claveBusqueda.nombre) - 1);
 
-    tNodoA **nodoEncontrado = buscarClave(&arbolOps, &claveBusqueda, cmpOperadorNombre);
+    // 2. Buscar si el operador ya existía dentro del ABB activo en RAM
+    tNodoA **nodoEncontrado = buscarClave(pa, &claveBusqueda, cmpOperadorNombre);
 
     if (nodoEncontrado != NULL && *nodoEncontrado != NULL)
     {
-        // Si YA EXISTÍA: incrementar partidas y actualizar récord si superó su marca
+        // Si YA EXISTÍA: incrementamos sus partidas y actualizamos su marca máxima
         tOperador *opExistente = (tOperador *)((*nodoEncontrado)->dato);
         opExistente->partidasJugadas++;
+
         if (puntajeObtenido > opExistente->maxPuntaje)
         {
             opExistente->maxPuntaje = puntajeObtenido;
@@ -256,23 +263,14 @@ void actualizarEstadisticasOperador(const char *nombreOp, int puntajeObtenido)
     }
     else
     {
-        // Si ES NUEVO: crear registro e insertarlo
+        // Si ES NUEVO: creamos el registro e insertamos el nuevo nodo en el ABB
         tOperador nuevoOp;
         memset(&nuevoOp, 0, sizeof(tOperador));
         strncpy(nuevoOp.nombre, nombreOp, sizeof(nuevoOp.nombre) - 1);
         nuevoOp.partidasJugadas = 1;
         nuevoOp.maxPuntaje = puntajeObtenido;
 
-        insertarEnArbol(&arbolOps, &nuevoOp, sizeof(tOperador), cmpOperadorNombre);
-    }
-
-    // 3. Volcar todo el ABB actualizado de nuevo al archivo binario operadores.dat
-    FILE *archEscritura = fopen("operadores.dat", "wb");
-    if (archEscritura != NULL)
-    {
-        // Guardar nodos del árbol en el archivo binario
-        // (Podés recorrer en inorden usando fwrite)
-        fclose(archEscritura);
+        insertarEnArbol(pa, &nuevoOp, sizeof(tOperador), cmpOperadorNombre);
     }
 }
 
@@ -349,7 +347,7 @@ void configuracionMostrar(tConfiguracion *config)
     printf("maximo_contenedores_por_buque %d\n", config->maximo_contenedores_por_buque);
 }
 
-void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion)
+void inicializarPuerto(tPuerto *puerto,const tConfiguracion *configuracion)
 {
     puerto->tiempoAnterior = -1;
     puerto->tiempoActual = 0;
@@ -451,21 +449,23 @@ tNodo* localizarZona(tLista *listaZonas, const char *codZona)
 
 int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
 {
-    if (archEscenario == NULL || puerto == NULL)
+    if (!archEscenario || !puerto)
         return ARCHIVO_NO_ENCONTRADO;
 
     char linea[200];
     int tiempoArribo;
 
-    // Reposicionamos al inicio del archivo para escanear los arribos del minuto T actual
+    // Reposicionamos la marca de lectura al inicio del archivo
+    // para escanear todo en busca del tiempo T actual
     rewind(archEscenario);
 
     while (fgets(linea, sizeof(linea), archEscenario) != NULL)
     {
+        // Ignoramos encabezados ([BUQUES], [CAMIONES]) y líneas vacías
         if (linea[0] == '[' || linea[0] == '\n' || linea[0] == '\r')
             continue;
 
-        // 1. CAMIONES (Líneas que empiezan con 'K')
+        // 1. PROCESAR LLEGADA DE CAMIÓN (El código empieza con 'K')
         if (linea[0] == 'K')
         {
             tCamion nuevoCamion;
@@ -481,7 +481,7 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
                 }
             }
         }
-        // 2. BUQUES (Líneas que empiezan con 'B')
+        // 2. PROCESAR LLEGADA DE BUQUE (El código empieza con 'B')
         else if (linea[0] == 'B')
         {
             tBuque nuevoBuque;
@@ -492,8 +492,10 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
             {
                 if (tiempoArribo == puerto->tiempoActual)
                 {
+                    // Inicializamos la cola interna de contenedores que trae el buque
                     crearCola(&nuevoBuque.sigContenedor);
 
+                    // Parseamos los contenedores separados por coma (ej: C101,C102,C103)
                     char *token = strtok(listaContenedores, ",\r\n");
                     while (token != NULL)
                     {
@@ -502,32 +504,35 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
                         snprintf(cont.codigo, sizeof(cont.codigo), "%s", token);
 
                         ponerEnCola(&nuevoBuque.sigContenedor, &cont, sizeof(tContenedor));
+
                         token = strtok(NULL, ",\r\n");
                     }
 
-                    // Buscamos un muelle disponible para atracarlo
-                    int idxMuelle = -1;
+                    // Buscamos si hay un muelle libre para atracarlo directamente
+                    int idxMuelleLibre = -1;
                     for (int i = 0; i < puerto->cantMuelles; i++)
                     {
                         if (puerto->muelles[i].disponible == 1)
                         {
-                            idxMuelle = i;
+                            idxMuelleLibre = i;
                             break;
                         }
                     }
 
-                    if (idxMuelle != -1)
+                    if (idxMuelleLibre != -1)
                     {
-                        puerto->muelles[idxMuelle].disponible = 0; // Ocupado
-                        puerto->muelles[idxMuelle].buqueAtracado = nuevoBuque;
+                        // Ocupamos el muelle y le asignamos el buque
+                        puerto->muelles[idxMuelleLibre].disponible = 0; // 0 = Ocupado
+                        puerto->muelles[idxMuelleLibre].buqueAtracado = nuevoBuque;
 
                         printf(" -> [ATRACO T=%d] Buque %s atraco directamente en Muelle %s.\n",
-                               puerto->tiempoActual, nuevoBuque.codigo, puerto->muelles[idxMuelle].codigo);
+                               puerto->tiempoActual, nuevoBuque.codigo, puerto->muelles[idxMuelleLibre].codigo);
                     }
                     else
                     {
+                        // Si todos los muelles están ocupados, va a la cola de espera de buques
                         ponerEnCola(&puerto->colaBuques, &nuevoBuque, sizeof(tBuque));
-                        printf(" -> [ARRIBO T=%d] Buque %s encolado (Muelles ocupados).\n",
+                        printf(" -> [ARRIBO T=%d] Buque %s ingreso a la cola de espera (Muelles ocupados).\n",
                                puerto->tiempoActual, nuevoBuque.codigo);
                     }
                 }
@@ -536,6 +541,90 @@ int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto)
     }
 
     return TODO_OK;
+}
+
+//Registrar una operación válida incrementando el contador
+void registrarOperacionOperador(tPuerto *puerto)
+{
+    puerto->operacionesRealizadas++;
+}
+
+void finalizarJornada(tPuerto *puerto, tArbol *arbolEstadisticas, const char *nombreOperador)
+{
+    printf("\n=========================================\n");
+    printf("         FIN DE LA SIMULACION            \n");
+    printf("=========================================\n");
+
+    // 1. Contar camiones sin atender en la cola para aplicar la penalización
+    int camionesSinAtender = 0;
+    tCola aux = puerto->colaCamiones;
+
+    // Recorremos los nodos de la cola sin liberar memoria todavía
+    tNodo *nodoCam = aux.pri;
+    while (nodoCam != NULL)
+    {
+        camionesSinAtender++;
+        nodoCam = nodoCam->sig;
+    }
+
+    int penalizacion = camionesSinAtender * 2;
+    puerto->puntuacionProvisoria -= penalizacion;
+    if (puerto->puntuacionProvisoria < 0)
+    {
+        puerto->puntuacionProvisoria = 0;
+    }
+
+    printf("Operador: %s\n", nombreOperador);
+    printf("Operaciones validas realizadas: %d\n", puerto->operacionesRealizadas);
+    printf("Puntaje acumulado: %d pts\n", puerto->puntuacionProvisoria + penalizacion);
+    printf("Camiones sin atender en cola: %d (-%d pts)\n", camionesSinAtender, penalizacion);
+    printf("PUNTAJE FINAL DE LA JORNADA: %d pts\n", puerto->puntuacionProvisoria);
+
+    // 2. Persistencia en el ABB (operadores.dat)
+    actualizarEstadisticasOperador(arbolEstadisticas, nombreOperador, puerto->puntuacionProvisoria);
+
+    FILE *archBin = fopen("operadores.dat", "wb");
+    if (archBin != NULL)
+    {
+        guardarArbolEnArchivoRec(*arbolEstadisticas, archBin);
+        fclose(archBin);
+    }
+
+    // 3. Persistencia en Texto Legible (operadores.txt)
+    FILE *archTxt = fopen("operadores.txt", "a+");
+    if (archTxt != NULL)
+    {
+        fprintf(archTxt, "Operador: %-10s | Puntaje: %-5d pts | Operaciones: %-3d\n",
+                nombreOperador, puerto->puntuacionProvisoria, puerto->operacionesRealizadas);
+        fclose(archTxt);
+    }
+
+    printf("\n[SISTEMA] Estadisticas y log de operaciones guardados en 'operadores.txt' y 'operadores.dat'.\n");
+    printf("\nPresione Enter para volver al menu principal...");
+    fflush(stdin);
+    getchar();
+
+    // 4. LIBERACIÓN SEGURA DE MEMORIA DINÁMICA (Al final de todo)
+    vaciarLista(&puerto->listaZonas);
+    vaciarCola(&puerto->colaBuques);
+    vaciarCola(&puerto->colaCamiones);
+}
+
+void guardarArbolEnArchivoRec(tArbol pa, FILE *arch)
+{
+    if (pa == NULL || arch == NULL)
+    {
+        return;
+    }
+
+    // Recorrer subárbol izquierdo
+    guardarArbolEnArchivoRec(pa->izq, arch);
+
+    // Escribir el nodo actual en el archivo binario usando pa->dato
+    fwrite(&(pa->dato), sizeof(tOperador), 1, arch); // <--- CAMBIAR 'info' POR 'dato'
+
+    // Recorrer subárbol derecho
+    guardarArbolEnArchivoRec(pa->der, arch);
 }
 
 //Funciones auxiliares

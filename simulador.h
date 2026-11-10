@@ -33,15 +33,15 @@ typedef struct
 //Pantallas de juego
 void pantallaInicial(int *estadoDeJuego);
 int ingresarNombreOperador(char *nombreDestino);
-void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp);
+void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp, tArbol *arbolEstadisticas);
 void mostrarPantallaEstadisticas(void);
-void actualizarEstadisticasOperador(const char *nombreOp, int puntajeObtenido);
+void actualizarEstadisticasOperador(tArbol *pa, const char *nombreOp, int puntajeObtenido);
 
 //Funciones configuracion
 int obtenerValorConfiguracion(char *cadena, FILE *archivo);
 int leerArchivoConfiguracion(tConfiguracion *configuracion);
 void configuracionMostrar(tConfiguracion *config);
-void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion);
+void inicializarPuerto(tPuerto *puerto,const tConfiguracion *configuracion);
 void inicializarMuelles(tLista *listaMuelles, int cantidad);
 void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas);
 
@@ -49,6 +49,8 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas);
 tNodo* localizarZona(tLista *listaZonas, const char *codZona);
 int verificarZonas(const char *codzona, tLista *listaZonas);
 int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto);
+void registrarOperacionOperador(tPuerto *puerto);
+void finalizarJornada(tPuerto *puerto, tArbol *arbolEstadisticas, const char *nombreOperador);
 
 
 //Funciones auxiliares
@@ -56,5 +58,6 @@ void stringMayuscula(char *str);
 int cmpCodZona(const void* c1, const void* c2);
 int cmpOperadorNombre(const void *e1, const void *e2);
 void mostrarOperador(const void *dato);
+void guardarArbolEnArchivoRec(tArbol pa, FILE *arch);
 
 #endif // SIMULADOR_H_INCLUDED

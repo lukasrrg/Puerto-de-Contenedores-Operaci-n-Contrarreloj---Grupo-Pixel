@@ -174,9 +174,10 @@ void vaciarLista(tLista *pl)
     while(*pl != NULL)
     {
         elim = *pl; // Guardamos la referencia al nodo actual
+        *pl = elim->sig; // Avanzamos el puntero de la lista al siguiente
         free(elim->dato); // Liberamos el dato reservado dinámicamente
         free(elim); // Liberamos el nodo
-        pl = &(*pl)->sig; // Avanzamos el puntero de la lista al siguiente
+
     }
 }
 
