@@ -69,83 +69,210 @@ int ingresarNombreOperador(char *nombreDestino)
 
 void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp)
 {
+    char lineaComando[100];
     char comando[10];
-    //tener alguna tLista llamada listaComandos, en donde se pueda verificar si un comando esta disponible o no
     int jornadaActiva = JORNADA_ACTIVA;
     int hayEventoFuturo = HAY_EVENTO_FUTURO;
 
     while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
     {
-        //Actualizar buques y camiones para el T actual
+        system("cls");
+
+        // Actualizar buques y camiones usando la funcion de tu compañero
         hayEventoFuturo = actualizarBuquesCamiones(puerto);
+        (void)hayEventoFuturo; // Evita warning de variable no usada
 
-        printf("Comandos disponibles: ");
-        //mostrarComandosDisponibles A IMPLEMENTAR
         printf("\n<%s> ", nombreOp);
-        scanf("%s", comando);               // Leemos el comando escrito
-        stringMayuscula(comando);           //Normalizamos todo a mayuscula, asi tambien se puede escribir en minuscula el comando
 
-        system("cls");                      // Limpia toda la pantalla ANTES de mostrar el menú
+        if (fgets(lineaComando, sizeof(lineaComando), stdin) != NULL)
+        {
+            if (sscanf(lineaComando, "%s", comando) == 1)
+            {
+                stringMayuscula(comando);
 
-        //Aca habria que comparar "comando" no con todos los comandos del juego, sino solo con los comandos disponibles
-        //o sea --> buscarEnLista(comando, listaComandos, funcion de comparacion)   SI "comando" NO EXISTE EN "listaComandos" volver a pedir el ingreso del comando
-        //tambien tener en cuenta que los comandos des y reu reciben parametros
-        //tambien verificar si el tiempo de esa accion llega a entrar dentro del tiempo de la jornada
-        if (strcmp(comando, "DES") == 0)
-        {
-            puerto->tiempoActual += configuracion->tiempo_descarga_contenedor;
-            //Aumentar puntuacion
-        }
-        else if (strcmp(comando, "REU") == 0)
-        {
-            if (verificarZonas(comando,&(puerto->listaZonas)))
-            {
-                reubicar(&(puerto->listaZonas),comando);
-            }//o se puede hacer todo en una sola función
-            puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
-        }
-        else if (strcmp(comando, "ENT") == 0)
-        {
-            if(entregarContenedor(puerto) == TODO_OK)
-            {
-                puerto->tiempoActual += configuracion->tiempo_carga_camion;
-                puerto->puntuacionProvisoria += 10;
+                // VER
+                if (strcmp(comando, "VER") == 0)
+                {
+                    mostrarEstadoPuerto(puerto);
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
+                // DES
+                else if (strcmp(comando, "DES") == 0)
+                {
+                    char codMuelle[TAM_COD_MUELLE];
+                    char codZona[TAM_COD_ZONA];
+
+                    if (sscanf(lineaComando, "%*s %s %s", codMuelle, codZona) == 2)
+                    {
+                        stringMayuscula(codMuelle);
+                        stringMayuscula(codZona);
+                        descargar(puerto, configuracion, codMuelle, codZona);
+                    }
+                    else
+                    {
+                        printf("\n[ERROR] Sintaxis incorrecta. Uso: DES <muelle> <zona>\n");
+                    }
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
+                // REU
+                /*else if (strcmp(comando, "REU") == 0)
+                {
+                    char codZonaOrig[TAM_COD_ZONA];
+                    char codZonaDest[TAM_COD_ZONA];
+
+                    if (sscanf(lineaComando, "%*s %s %s", codZonaOrig, codZonaDest) == 2)
+                    {
+                        stringMayuscula(codZonaOrig);
+                        stringMayuscula(codZonaDest);
+                        if (reubicar(&puerto->listaZonas, codZonaOrig, codZonaDest) == TODO_OK)
+                        {
+                            puerto->tiempoActual += configuracion->tiempo_reubicacion_contenedor;
+                        }
+                    }
+                    else
+                    {
+                        printf("\n[ERROR] Sintaxis incorrecta. Uso: REU <zonaOrigen> <zonaDestino>\n");
+                    }
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }*/
+                // ENT
+                else if (strcmp(comando, "ENT") == 0)
+                {
+                    if (entregarContenedor(puerto) == TODO_OK)
+                    {
+                        puerto->tiempoActual += configuracion->tiempo_carga_camion;
+                        puerto->puntuacionProvisoria += 10;
+                    }
+                    else
+                    {
+                        printf("\n[ERROR] No se pudo entregar el contenedor.\n");
+                    }
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
+                // ESP
+                else if (strcmp(comando, "ESP") == 0)
+                {
+                    puerto->tiempoActual++;
+                }
+                // SALIR
+                else if (strcmp(comando, "SALIR") == 0)
+                {
+                    jornadaActiva = FIN_DE_JORNADA;
+                }
+                else
+                {
+                    printf("\n[ERROR] Comando no reconocido.\n");
+                    printf("\nPresione Enter para continuar...");
+                    fflush(stdin);
+                    getchar();
+                }
             }
         }
-        else if (strcmp(comando, "VER") == 0)
+
+        if (puerto->tiempoActual >= configuracion->duracion_jornada_minutos)
         {
-            mostrarEstadoPuerto(puerto); // Llama a la función
+            printf("\n=== TIEMPO LIMITE ALCANZADO: FIN DE LA JORNADA (T = %d min) ===\n", puerto->tiempoActual);
+            printf("\nPresione Enter para volver al menu principal...");
+            fflush(stdin);
+            getchar();
         }
-        else if (strcmp(comando, "ESP") == 0)
+    }
+}
+
+void mostrarPantallaEstadisticas(void)
+{
+    system("cls");
+    printf("=================== RANKING DE OPERADORES ===================\n");
+    printf("  Operador        | Partidas Jugadas | Maximo Puntaje\n");
+    printf("-------------------------------------------------------------\n");
+
+    FILE *archOps = fopen("operadores.dat", "rb");
+    if (archOps == NULL)
+    {
+        printf("  [INFO] No hay estadisticas registradas todavia.\n");
+    }
+    else
+    {
+        tArbol arbolOps;
+        crearArbol(&arbolOps);
+
+        tOperador opBuffer;
+        while (fread(&opBuffer, sizeof(tOperador), 1, archOps) == 1)
         {
-            puerto->tiempoActual++; // ESP avanza el reloj 1 minuto
+            insertarEnArbol(&arbolOps, &opBuffer, sizeof(tOperador), cmpOperadorNombre);
         }
-        else if (strcmp(comando, "SALIR") == 0) // Un comando extra para salir del bucle
+        fclose(archOps);
+
+        // Recorre el ABB en In-Order (imprime en orden alfabetico)
+        recorrerInorden(&arbolOps, mostrarOperador);
+    }
+
+    printf("=============================================================\n");
+    printf("\nPresione Enter para volver al menu principal...");
+    fflush(stdin);
+    getchar();
+}
+
+void actualizarEstadisticasOperador(const char *nombreOp, int puntajeObtenido)
+{
+    tArbol arbolOps;
+    crearArbol(&arbolOps);
+
+    // 1. Cargar datos existentes desde operadores.dat
+    FILE *archLectura = fopen("operadores.dat", "rb");
+    if (archLectura != NULL)
+    {
+        tOperador opBuffer;
+        while (fread(&opBuffer, sizeof(tOperador), 1, archLectura) == 1)
         {
-            jornadaActiva = FIN_DE_JORNADA;
+            insertarEnArbol(&arbolOps, &opBuffer, sizeof(tOperador), cmpOperadorNombre);
         }
-        else
+        fclose(archLectura);
+    }
+
+    // 2. Buscar si el operador ya existía en el árbol
+    tOperador claveBusqueda;
+    strncpy(claveBusqueda.nombre, nombreOp, sizeof(claveBusqueda.nombre) - 1);
+
+    tNodoA **nodoEncontrado = buscarClave(&arbolOps, &claveBusqueda, cmpOperadorNombre);
+
+    if (nodoEncontrado != NULL && *nodoEncontrado != NULL)
+    {
+        // Si YA EXISTÍA: incrementar partidas y actualizar récord si superó su marca
+        tOperador *opExistente = (tOperador *)((*nodoEncontrado)->dato);
+        opExistente->partidasJugadas++;
+        if (puntajeObtenido > opExistente->maxPuntaje)
         {
-            printf("[ERROR] Comando no reconocido. Intente VER o ESP.\n");
+            opExistente->maxPuntaje = puntajeObtenido;
         }
+    }
+    else
+    {
+        // Si ES NUEVO: crear registro e insertarlo
+        tOperador nuevoOp;
+        memset(&nuevoOp, 0, sizeof(tOperador));
+        strncpy(nuevoOp.nombre, nombreOp, sizeof(nuevoOp.nombre) - 1);
+        nuevoOp.partidasJugadas = 1;
+        nuevoOp.maxPuntaje = puntajeObtenido;
 
-        //Registrar la operacion realizada
+        insertarEnArbol(&arbolOps, &nuevoOp, sizeof(tOperador), cmpOperadorNombre);
+    }
 
-
-        //Actualizacion (capaz se puede hacer al principio del while)
-        //if (comandosDisponibles(puerto, listaComandos))
-//        {Hacer una lista de comandos disponibles?}
-//        else if (verificar si quedan eventos futuros o buques con contenedores o camiones esperando)
-//        {
-//            avance automatico del tiempo
-//        }
-//        else
-//        {
-//            jornadaActiva = FIN_DE_JORNADA
-//        }
-
-
-
+    // 3. Volcar todo el ABB actualizado de nuevo al archivo binario operadores.dat
+    FILE *archEscritura = fopen("operadores.dat", "wb");
+    if (archEscritura != NULL)
+    {
+        // Guardar nodos del árbol en el archivo binario
+        // (Podés recorrer en inorden usando fwrite)
+        fclose(archEscritura);
     }
 }
 
@@ -240,15 +367,14 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad)
 {
     int i;
     tMuelle muelleActual;
-    char codigo[TAM_COD_MUELLE];
 
     for (i = 1; i <= cantidad; i++)
     {
-        strcpy(muelleActual.codigo, "M");
-        itoa(i, codigo, 10);
-        strcat(muelleActual.codigo, codigo);
+        // Limpia toda la memoria de muelleActual a ceros
+        memset(&muelleActual, 0, sizeof(tMuelle));
 
-        muelleActual.buqueActual = NULL;
+        snprintf(muelleActual.codigo, sizeof(muelleActual.codigo), "M%d", i);
+        muelleActual.disponible = 1; // 1 = Libre / Disponible
 
         insertarAlFinal(listaMuelles, &muelleActual, sizeof(tMuelle));
     }
@@ -256,9 +382,13 @@ void inicializarMuelles(tLista *listaMuelles, int cantidad)
 
 void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 {
-    for (int i = 1; i <= cantidadZonas; i++)
+    tZona nuevaZona;
+    tZona zona;
+    int i;
+    char buffer[4];
+
+    for (i = 1; i <= cantidadZonas; i++)
     {
-        tZona nuevaZona;
         memset(&nuevaZona, 0, sizeof(tZona));
 
         crearPila(&nuevaZona.pila);
@@ -267,29 +397,39 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
         // Copia los bytes de nuevaZona dentro de la memoria del nodo de la lista
         insertarAlFinal(listaZonas, &nuevaZona, sizeof(tZona));
-    tZona *zona;
-    int i;
-    char buffer[4];
-    for (i=1;i<=cantidadZonas;i++)
-    {
-        crearPila(&(zona->pila));
-        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
-        itoa(i, buffer, 10);
-        strcpy(zona->codigo,"Z");
-        strcat(zona->codigo,buffer);
 
-        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+        for (i=1; i<=cantidadZonas; i++)
+        {
+            crearPila(&zona.pila);
+            zona.capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
+            itoa(i, buffer, 10);
+            strcpy(zona.codigo,"Z");
+            strcat(zona.codigo,buffer);
+
+            insertarAlFinal(listaZonas,&zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+        }
     }
 }
 
 //Juego
 
+
+int verificarZonas(const char *codzona, tLista *listaZonas)
+{
+    // Si localizarZona encuentra la zona (devuelve un puntero != NULL), la zona existe (devuelve 1)
+    // Si devuelve NULL, la zona no existe (devuelve 0)
+    if (localizarZona(listaZonas, codzona) != NULL)
+    {
+        return 1; // Zona existente / válida
+    }
+
+    return 0; // Zona inexistente
+}
+
 tNodo* localizarZona(tLista *listaZonas, const char *codZona)
 {
     if (listaZonas == NULL || *listaZonas == NULL || codZona == NULL)
-    {
         return NULL;
-    }
 
     tNodo *nodoActual = *listaZonas;
 
@@ -305,201 +445,7 @@ tNodo* localizarZona(tLista *listaZonas, const char *codZona)
         nodoActual = nodoActual->sig; // Avanza al siguiente nodo
     }
 
-    return NULL; // Recorrió toda la lista y la zona no existe
-}
-
-
-int verificarZonas(const char *codzona, tLista *listaZonas)
-{
-    // Si localizarZona encuentra la zona (devuelve un puntero != NULL), la zona existe (devuelve 1)
-    // Si devuelve NULL, la zona no existe (devuelve 0)
-    if (localizarZona(listaZonas, codzona) != NULL)
-    {
-        return 1; // Zona existente / válida
-    }
-
-    return 0; // Zona inexistente
-}
-
-void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario)
-tNodo* localizarZona(tLista *listaZonas, const char codZona)
-{
-    int comp;
-    tNodo* nodoActual = *listaZonas;
-    if(!(*listaZonas))
-    {
-        return NULL;
-    }
-    comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
-    while(*listaZonas || comp!=0)
-    {
-        nodoActual=nodoActual->sig;
-        comp=cmpCodZona(&codZona,(*listaZonas)->(*tZona)dato->codigo);
-    }
-
-    if(comp!=0)
-    {
-        return NULL;
-    }
-
-    return nodoActual;
-}
-
-int verificarZonas (const char codzona, tLista* listaZonas)
-{
-    //TERMINAR DE HACER (podría recorrer la lista de zonas hasta el final para verificar si existe)
-    return 1;
-}
-
-int descargar(tLista *listaZonas, const char codZona)
-{
-    char codContenedor[TAM_COD_CONTENEDOR]; //falta asignar el codigo de contenedor
-                                            //esto es una version basica
-    if(!listaZonas)
-    {
-        return -1;  //esto no deberia pasar, a menos que la cantidad de zonas en config.txt sea 0
-    }
-    return 0;
-}
-
-int reubicar(tLista *listaZonas, const char codZona)
-{
-    tNodo* zonaInsertar, *zonaRetirar;
-    char container[4];
-    zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
-    zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
-    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
-    {
-        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
-        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
-        return 1;
-    }
-    return 0;
-}
-
-void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config)
-{
-    char lineaComando[100];
-    char comando[10];
-    int continuarJornada = 1;
-
-    // Primer chequeo e impresión inicial o inicio del reloj T=0
-    printf("\n=== INICIO DE LA JORNADA OPERATIVA (T = %d) ===\n", puerto->tiempoActual);
-
-    while (continuarJornada && puerto->tiempoActual < config->duracion_jornada_minutos)
-    {
-        //system("cls"); // Limpia la pantalla al iniciar cada turno de la consola
-
-        printf("=== MINUTO ACTUAL T = %d min ===\n", puerto->tiempoActual);
-
-        // 1. Procesar los arribos del minuto T actual desde puerto.txt
-        if (archEscenario != NULL)
-        {
-            procesarArribosDelMinuto(archEscenario, puerto);
-        }
-
-        printf("\nOPERADOR> ");
-
-        if (fgets(lineaComando, sizeof(lineaComando), stdin) != NULL)
-        {
-            if (sscanf(lineaComando, "%s", comando) == 1)
-            {
-                stringMayuscula(comando);
-
-                // ==========================================
-                // COMANDO VER
-                // ==========================================
-                if (strcmp(comando, "VER") == 0)
-                {
-                    system("cls");
-                    mostrarEstadoPuerto(puerto);
-                    printf("\nPresione Enter para continuar...");
-                    fflush(stdin);
-                    getchar(); // PAUSA CLAVE para leer el estado antes de limpiar
-                }
-                // ==========================================
-                // COMANDO DES (DES <muelle> <zona>)
-                // ==========================================
-                else if (strcmp(comando, "DES") == 0)
-                {
-                    system("cls");
-                    char codMuelle[TAM_COD_MUELLE];
-                    char codZona[TAM_COD_ZONA];
-
-                    if (sscanf(lineaComando, "%*s %s %s", codMuelle, codZona) == 2)
-                    {
-                        stringMayuscula(codMuelle);
-                        stringMayuscula(codZona);
-                        descargar(puerto, config, codMuelle, codZona);
-                    }
-                    else
-                    {
-                        printf("\n[ERROR] Sintaxis incorrecta. Uso: DES <muelle> <zona> (Ej: DES M1 Z1)\n");
-                    }
-
-                    printf("\nPresione Enter para continuar...");
-                    fflush(stdin);
-                    getchar();
-                }
-                // ==========================================
-                // COMANDO ESP (Avanzar 1 minuto voluntariamente)
-                // ==========================================
-                else if (strcmp(comando, "ESP") == 0)
-                {
-                    system("cls");
-                    puerto->tiempoActual++;
-                    printf(" -> [TIEMPO AVANZADO] Reloj actual T = %d min.\n", puerto->tiempoActual);
-                }
-                // ==========================================
-                // COMANDO SALIR
-                // ==========================================
-                else if (strcmp(comando, "SALIR") == 0)
-                {
-                    continuarJornada = 0;
-                    printf("\nJornada operativa finalizada por el operador.\n");
-                    printf("\nPresione Enter para salir al menu...");
-                    fflush(stdin);
-                    getchar();
-                }
-                else
-                {
-                    printf("\n[ERROR] Comando no reconocido. Intente VER, DES, ESP o SALIR.\n");
-                    printf("\nPresione Enter para continuar...");
-                    fflush(stdin);
-                    getchar();
-                }
-            // Extraemos únicamente el primer código de operación (ej: DES, REU, ENT, VER, ESP)
-            sscanf(lineaComando, "%s", comando);
-
-            // =========================================================
-            // AQUÍ UBICÁS EL CHEQUEO DEL COMANDO "VER"
-            // =========================================================
-            if (strcmp(comando, "VER") == 0)
-            {
-                mostrarEstadoPuerto(puerto); // Muestra muelles, zonas, ventana y NO consume tiempo T
-            }
-            else if (strcmp(comando, "DES") == 0)
-            {
-                // TODO: Lógica para Descargar y Almacenar (DES  )
-            }
-            else if (strcmp(comando, "REU") == 0)
-            {
-                // TODO: Lógica para Reubicar contenedor (REU  )
-            }
-            else if (strcmp(comando, "ENT") == 0)
-            {
-                // TODO: Lógica para Entregar contenedor al camión (ENT)
-            }
-        }
-    }
-
-    if (puerto->tiempoActual >= config->duracion_jornada_minutos)
-    {
-        printf("\n=== TIEMPO LIMITE ALCANZADO: FIN DE LA JORNADA (T = %d min) ===\n", puerto->tiempoActual);
-        printf("\nPresione Enter para volver al menu principal...");
-        fflush(stdin);
-        getchar();
-    }
+    return NULL; // Si no la encuentra
 }
 
 
@@ -608,4 +554,19 @@ int cmpCodZona(const void* c1, const void* c2)
     cod1= (const char *) c1;
     cod2= (const char *) c2;
     return strcmp(cod1,cod2);
+}
+
+// Función de comparación para ordenar los operadores por nombre en el ABB
+int cmpOperadorNombre(const void *e1, const void *e2)
+{
+    const tOperador *op1 = (const tOperador *)e1;
+    const tOperador *op2 = (const tOperador *)e2;
+    return strcmp(op1->nombre, op2->nombre);
+}
+
+// Función de acción para imprimir cada operador en el recorrido In-Order
+void mostrarOperador(const void *dato)
+{
+    const tOperador *op = (const tOperador *)dato;
+    printf("  %-15s | %-16d | %d pts\n", op->nombre, op->partidasJugadas, op->maxPuntaje);
 }

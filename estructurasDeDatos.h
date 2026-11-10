@@ -21,9 +21,13 @@
 #define ELEM_ENCONTRADO 1
 #define ELEM_NO_ENCONTRADO 0
 #define HAY_OCURRENCIA 0
+//#Defines Arbol
+#define SIN_MEMORIA -900
+#define INSERTADO 345
+#define DUPLICADO 348
 
 #define TODO_OK 0
-#define minimo(X,Y) ((X) < (Y)) ? (X) : (Y)
+#define MINIMO(X,Y) ((X) < (Y)) ? (X) : (Y)
 
 typedef struct sNodo
 {
@@ -54,6 +58,9 @@ typedef struct
 
 typedef tNodo *tLista;
 typedef tNodoA* tArbol;
+
+typedef void (*Mostrar)(const void* dato);
+typedef int (*Cmp)(const void* e1, const void* e2);
 
 //Funciones Pila
 void crearPila(tPila *pl);

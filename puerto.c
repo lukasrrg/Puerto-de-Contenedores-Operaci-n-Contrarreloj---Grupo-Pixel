@@ -1,9 +1,6 @@
 #include "puerto.h"
 #include "simulador.h"
 
-///COMANDOS
-
-
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos)
 //{
 //    criterios para saber si un comando esta disponible:
@@ -95,10 +92,10 @@ int entregarContenedor(tPuerto *puerto)
     while(listaZonas != NULL)
     {
         zonaActual = (tZona*)listaZonas->dato;
-        verTope(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+        verTope(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
         if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a cami�n.s�loC�digoBuscado
         {
-            sacarDePila(&zonaActual->pilaContenedores, &contenedorActual, sizeof(tContenedor));
+            sacarDePila(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
             sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
             return TODO_OK;
         }
@@ -115,6 +112,9 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 {
     // 1. Buscar el muelle ingresado
     int idxMuelle = -1;
+    tNodo *nodoZona;
+    tZona *zonaDestino;
+    tContenedor contenedorExtraido;
     for (int i = 0; i < puerto->cantMuelles; i++)
     {
         if (strcmp(puerto->muelles[i].codigo, codMuelle) == 0)
@@ -131,14 +131,14 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
 
     // 2. Localizar la zona destino
-    tNodo *nodoZona = localizarZona(&puerto->listaZonas, codZona);
+    nodoZona = localizarZona(&puerto->listaZonas, codZona);
     if (nodoZona == NULL)
     {
         printf("\n[ERROR] La zona %s no existe.\n", codZona);
         return OPCION_NO_VALIDA;
     }
 
-    tZona *zonaDestino = (tZona *)nodoZona->dato;
+    zonaDestino = (tZona *)nodoZona->dato;
 
     // 3. Validar capacidad de la pila de la zona
     if (pilaLlena(&zonaDestino->pila, sizeof(tContenedor)))
@@ -148,7 +148,6 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
 
     // 4. Extraer el contenedor de la cola del buque
-    tContenedor contenedorExtraido;
     memset(&contenedorExtraido, 0, sizeof(tContenedor));
 
     if (sacarDeCola(&puerto->muelles[idxMuelle].buqueAtracado.sigContenedor, &contenedorExtraido, sizeof(tContenedor)) != TODO_OK)
@@ -171,13 +170,13 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 }
 
 //REU
-int reubicar(tLista *listaZonas, const char codZona)
+/*int reubicar(tLista *listaZonas, const char codZona)
 {
     tNodo* zonaInsertar, *zonaRetirar;
     char container[4];
     zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
     zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
-    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    if (((*tZona)zonaInsertar->dato->capacidad) > 0 && pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
     {
         sacarDePila(&((*tZona)zonaRetirar->dato)->pila,container,sizeof(container));
         ponerEnPila(&((*tZona)zonaInsertar->dato)->pila,container,sizeof(container));
@@ -186,20 +185,18 @@ int reubicar(tLista *listaZonas, const char codZona)
         return 1;
     }
     return 0;
-}
+}*/
 
 //Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelleDato)
 {
-    const tMuelle *muelle = (tMuelle*)muelleDato;
+    const tMuelle *muelle = (const tMuelle*)muelleDato;
 
     printf("  - Muelle %s: ", muelle->codigo);
-    if (muelle->buqueActual == NULL)
+    if (muelle->disponible == 1)
         printf("Disponible\n");
     else
-    {
-        mostrarBuque(muelle->buqueActual);
-    }
+        printf("Ocupado por Buque %s\n", muelle->buqueAtracado.codigo);
 }
 
 void mostrarBuque(const void *buqueDato)
@@ -329,9 +326,9 @@ int procesarLineaPuerto(char *linea, tPuerto *puerto)
 
 int muelleDisponible(const void *muelleDato, const void *nulo)
 {
-    tMuelle *muelle = (tMuelle*)muelleDato;
+    const tMuelle *muelle = (const tMuelle*)muelleDato;
 
-    return !(muelle->buqueActual == NULL);
+    return (muelle->disponible == 1);
 }
 
 void devolverMuelle(void *dato, void *destino)
@@ -341,5 +338,6 @@ void devolverMuelle(void *dato, void *destino)
 
 void atracarBuque(tMuelle *muelle, tBuque *buque)
 {
-    muelle->buqueActual = buque;
+    muelle->disponible = 0;
+    muelle->buqueAtracado = *buque;
 }

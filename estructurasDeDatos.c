@@ -44,7 +44,7 @@ int sacarDePila(tPila *pl, void *buffer, unsigned cantBytes)
     memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
     pl->tope += sizeof(unsigned);
 
-    memcpy(buffer, pl->pila + pl->tope, minimo(tamDato, cantBytes));             //Recupero el dato
+    memcpy(buffer, pl->pila + pl->tope, MINIMO(tamDato, cantBytes));             //Recupero el dato
     pl->tope += tamDato;
 
     return TODO_OK;
@@ -59,7 +59,7 @@ int verTope(const tPila *pl, void *buffer, unsigned cantBytes)
 
     memcpy(&tamDato, pl->pila + pl->tope, sizeof(unsigned));      //Recupero el tamaño del dato
 
-    memcpy(buffer, pl->pila + pl->tope + sizeof(unsigned), minimo(tamDato, cantBytes));             //Recupero el dato
+    memcpy(buffer, pl->pila + pl->tope + sizeof(unsigned), MINIMO(tamDato, cantBytes));             //Recupero el dato
 
     return TODO_OK;
 }
@@ -118,7 +118,7 @@ int verPrimero(const tCola *pc, void *buffer, unsigned cantBytes)
 
     tNodo *nodoActual = pc->pri;
 //  Copio el dato --> min(cantBytes, pri.tam)
-    memcpy(buffer, nodoActual->dato, minimo(cantBytes, nodoActual->tam));
+    memcpy(buffer, nodoActual->dato, MINIMO(cantBytes, nodoActual->tam));
 
     return TODO_OK;
 }
@@ -136,7 +136,7 @@ int sacarDeCola(tCola *pc, void *buffer, unsigned cantBytes)
 
     tNodo *nodoActual = pc->pri;
 //  Copio el dato --> min(cantBytes, pri.tam)
-    memcpy(buffer, nodoActual->dato, minimo(cantBytes, nodoActual->tam));
+    memcpy(buffer, nodoActual->dato, MINIMO(cantBytes, nodoActual->tam));
 //  Actualizo pri (pri = pri.sig o elim.sig)
     pc->pri = nodoActual->sig;
 //  Libero al dato
@@ -479,7 +479,7 @@ int eliminarPorClave(tArbol* pa,void* clave, unsigned tam, Cmp cmp)
     return eliminarRaiz(pa);
 }
 
-void cargarOrdEnBalanceado(tArbol* pa, FILE* arch, int ini, int fin)
+/*void cargarOrdEnBalanceado(tArbol* pa, FILE* arch, int ini, int fin)
 {
     size_t med = (ini+fin)/2;
     tIndice ind;
@@ -506,4 +506,4 @@ int indexarOrdenado(tArbol* pa, FILE* arch)
     cantreg=ftell(arch)/sizeof(tAlumno);
     cargarOrdEnBalanceado(pa,arch,0,cantreg-1);
     return 1;
-}
+}*/

@@ -18,9 +18,16 @@
 #define ERROR_ELEM_DUP -999
 #define ACEPTA_DUP 1
 #define NO_ACEPTA_DUP 0
+#define ELEM_ENCONTRADO 1
+#define ELEM_NO_ENCONTRADO 0
+#define HAY_OCURRENCIA 0
+//#Defines Arbol
+#define SIN_MEMORIA -900
+#define INSERTADO 345
+#define DUPLICADO 348
 
 #define TODO_OK 0
-#define minimo(X,Y) ((X) < (Y)) ? (X) : (Y)
+#define MINIMO(X,Y) ((X) < (Y)) ? (X) : (Y)
 
 typedef struct sNodo
 {
@@ -28,6 +35,15 @@ typedef struct sNodo
     unsigned tam;
     struct sNodo *sig;
 } tNodo;
+
+typedef struct sNodoA
+{
+    void* dato;
+    unsigned tam;
+    struct sNodoA* izq;
+    struct sNodoA* der;
+}tNodoA; //Estructura de arbol;
+
 
 typedef struct
 {
@@ -41,6 +57,10 @@ typedef struct
 } tCola;
 
 typedef tNodo *tLista;
+typedef tNodoA* tArbol;
+
+typedef void (*Mostrar)(const void* dato);
+typedef int (*Cmp)(const void* e1, const void* e2);
 
 //Funciones Pila
 void crearPila(tPila *pl);
@@ -69,6 +89,19 @@ int insertarAlFinal(tLista *pl, void *dato, unsigned tam);
 int insertarSinDuplicados(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de una funcion de accion
 int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void *elem1, const void *elem2), int aceptaDuplicados, void (*accion)(void *elemEnLista, void *datoAccion)); //Agregar parametro de si acepta dup. Si no acepta, puede que no haga nada, o que haga una accion
 int mostrarLista(const tLista *pl, void (*muestra)(const void *dato));
-//int buscarEnLista(const void *dato, const void *lista, funcion de comparacion);
+int buscarEnLista(const tLista *pl, const void *buscado, void *devolver, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *dato, void *devolucion));
+
+//Funciones Arbol
+void crearArbol(tArbol* pa);
+void recorrerInorden(tArbol* pa, Mostrar mostrar);
+int insertarEnArbol(tArbol* pa, void* dato, unsigned tam, Cmp cmp);
+int altura (tArbol* pa);
+int eliminarRaiz(tArbol* pa);
+int eliminarPorClave(tArbol* pa,void* clave, unsigned tam, Cmp cmp);
+tNodoA** buscarMayor(tArbol* pa);
+tNodoA** buscarMenor(tArbol* pa);
+tNodoA** buscarClave(tArbol* pa,const void* clave, Cmp cmp);
+void cargarOrdEnBalanceado(tArbol* pa, FILE* arch, int ini, int fin);
+int indexarOrdenado(tArbol* pa, FILE* arch);
 
 #endif // ESTRUCTURASDEDATOS_H_INCLUDED

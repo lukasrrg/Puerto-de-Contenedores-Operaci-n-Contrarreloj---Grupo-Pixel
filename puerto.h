@@ -3,9 +3,8 @@
 
 #include "estructurasDeDatos.h"
 
-
 #define TAM_COD_CONTENEDOR 5
-#define TAM_COD_MUELLE 10
+#define TAM_COD_MUELLE 15
 #define TAM_COD_BUQUE 5
 #define TAM_COD_CAMION 5
 #define TAM_COD_ZONA 15
@@ -38,13 +37,6 @@ typedef struct
     tCola sigContenedor;
     //tPila o tCola sigContenedor;      Decidir si se usa con pila o con cola
 } tBuque;
-
-typedef struct
-{
-    char codigo[TAM_COD_MUELLE];
-    tBuque *buqueActual;            //Si vale NULL es porque esta disponible
-//    int disponible; //Actua como booleano, 0 = no disponible, 1 = disponible      (SI DEFINIMOS EL CAMPOR buqueActual CREO QUE NO HACE FALTA)
-} tMuelle;
 
 typedef struct
 {
@@ -87,7 +79,6 @@ typedef struct
     tCola colaCamiones;
 } tPuerto;                   //Variables de la partida en una sola estructura
 
-#include "simulador.h" //Este include es para que lo tome a tPuerto en simulador. No mover
 typedef struct
 {
     char tipo;              //Vale B si es un buque o K si es un camion
@@ -95,11 +86,13 @@ typedef struct
     tCola contenedores;
 } tEventoFuturo;
 
+#include "simulador.h" //Este include es para que lo tome a tPuerto en simulador. No mover
+
 //COMANDOS
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos) Devuelve la cantidad de comandos posibles y guarda en la lista los comandos detectados como disponibles
 void mostrarEstadoPuerto(const tPuerto *puerto); //VER
 int entregarContenedor(tPuerto *puerto); //ENT
-int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona);
+int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona);//DES
 int reubicar(tLista *listaZonas, const char codZona); //REU
 
 //Funciones de buques, camiones, contenedor, etc

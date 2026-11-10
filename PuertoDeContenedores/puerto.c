@@ -1,9 +1,6 @@
 #include "puerto.h"
 #include "simulador.h"
 
-///COMANDOS
-
-
 //int comandosDisponibles(const tPuerto *puerto, tLista *listaComandos)
 //{
 //    criterios para saber si un comando esta disponible:
@@ -46,7 +43,7 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
         {
             zona = (tZona *)nodoZonaActual->dato;
 
-            // Como tZona no tiene una Pila en el .h, solo imprimimos su código.
+            // Como tZona no tiene una Pila en el .h, solo imprimimos su cÃ³digo.
             printf("  - Zona %s\n", zona->codigo);
 
             nodoZonaActual = nodoZonaActual->sig;
@@ -82,11 +79,42 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
     printf("=========================================================\n\n");
 }
 
+// ENT
+int entregarContenedor(tPuerto *puerto)
+{
+    tCamion camion;
+    tNodo *listaZonas = puerto->listaZonas;
+    tZona *zonaActual;
+    tContenedor contenedorActual;
+
+    verPrimero(&puerto->colaCamiones, &camion, sizeof(tCamion));
+
+    while(listaZonas != NULL)
+    {
+        zonaActual = (tZona*)listaZonas->dato;
+        verTope(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
+        if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a camiï¿½n.sï¿½loCï¿½digoBuscado
+        {
+            sacarDePila(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
+            sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
+            return TODO_OK;
+        }
+        else
+        {
+            listaZonas = listaZonas->sig;
+        }
+    }
+    return CONTENEDOR_NO_ENCONTRADO;
+}
+
 //DES
 int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuelle, const char *codZona)
 {
     // 1. Buscar el muelle ingresado
     int idxMuelle = -1;
+    tNodo *nodoZona;
+    tZona *zonaDestino;
+    tContenedor contenedorExtraido;
     for (int i = 0; i < puerto->cantMuelles; i++)
     {
         if (strcmp(puerto->muelles[i].codigo, codMuelle) == 0)
@@ -103,14 +131,14 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
 
     // 2. Localizar la zona destino
-    tNodo *nodoZona = localizarZona(&puerto->listaZonas, codZona);
+    nodoZona = localizarZona(&puerto->listaZonas, codZona);
     if (nodoZona == NULL)
     {
         printf("\n[ERROR] La zona %s no existe.\n", codZona);
         return OPCION_NO_VALIDA;
     }
 
-    tZona *zonaDestino = (tZona *)nodoZona->dato;
+    zonaDestino = (tZona *)nodoZona->dato;
 
     // 3. Validar capacidad de la pila de la zona
     if (pilaLlena(&zonaDestino->pila, sizeof(tContenedor)))
@@ -120,7 +148,6 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     }
 
     // 4. Extraer el contenedor de la cola del buque
-    tContenedor contenedorExtraido;
     memset(&contenedorExtraido, 0, sizeof(tContenedor));
 
     if (sacarDeCola(&puerto->muelles[idxMuelle].buqueAtracado.sigContenedor, &contenedorExtraido, sizeof(tContenedor)) != TODO_OK)
@@ -149,44 +176,168 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
     char container[4];
     zonaRetirar=localizarZona(listaZonas,codZona+4);//recibe "Zx Zy", pero compara solamente los promeros 2 caracteres
     zonaInsertar=localizarZona(listaZonas,codZona+7); //recibe "Zy" y lo compara con las zonas de la lista para posicionar a zonaRetirar
-    if (((*tZona)zonaInsertar->dato->capacidad>0)&& pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
+    if (((*tZona)zonaInsertar->dato->capacidad) > 0 && pilaVacia(&(*tZona)zonaRetirar->dato->pila)==0)//verifica si hay espacio en una pila y si hay elementos en la otra
     {
-        sacarDePila(&(*tZona)zonaRetirar->dato->pila,container,sizeof(container));
-        ponerEnPila(&(*tZona)zonaInsertar->dato->pila,container,sizeof(container));
+        sacarDePila(&((*tZona)zonaRetirar->dato)->pila,container,sizeof(container));
+        ponerEnPila(&((*tZona)zonaInsertar->dato)->pila,container,sizeof(container));
+        ((*tZona)zonaRetirar->dato)->capacidad++;
+        ((*tZona)zonaInsertar->dato)->capacidad--;
         return 1;
     }
     return 0;
-}
-*/
+}*/
 
+//Funciones de buques, camiones, contenedor, etc
 void mostrarMuelle(const void *muelleDato)
 {
-    const tMuelle *muelle = muelleDato;
+    const tMuelle *muelle = (const tMuelle*)muelleDato;
 
     printf("  - Muelle %s: ", muelle->codigo);
-    if (muelle->disponible)
+    if (muelle->disponible == 1)
         printf("Disponible\n");
     else
-        printf("No disponible\n");
+        printf("Ocupado por Buque %s\n", muelle->buqueAtracado.codigo);
 }
 
-//actualizarBuques(puerto, archivo)
-//{
-//    leer archivo y comparar con el tiempo actual a ver si llega algun buque
-//      if (hay buque)
-    //      if (no hay muelle disponible)
-//          {
-//            insertar buque en cola de espera del puerto
-//          }
-//          else
-//          {
-//            asignar a muelle
-//          }
-//}
-//
-////actualizarCamiones(puerto, archivo)
-//{
-//    leer archivo y comprar con el tiempo actual a ver si llega algun camion
-//        if (hay camion)
-//            insertar en cola de espera
-//}
+void mostrarBuque(const void *buqueDato)
+{
+    const tBuque *buque = (tBuque*)buqueDato;
+
+    tContenedor contenedor;
+    verPrimero(&buque->sigContenedor, &contenedor, sizeof(tContenedor));
+    printf("Buque %s: %s\n", buque->codigo, contenedor.codigo);
+
+}
+
+int actualizarBuquesCamiones(tPuerto *puerto)
+{
+    int eventoFuturo = NO_HAY_EVENTO_FUTURO;
+
+    FILE *archivo = fopen("puerto.txt", "r");
+    if (archivo == NULL)
+        return ARCHIVO_NO_ENCONTRADO;
+
+    char linea[MAX_LARGO_LINEA];
+
+    while(fgets(linea, sizeof(linea), archivo) != NULL)
+    {
+        linea[strcspn(linea, "\n")] = '\0';     // Sacamos el '\n'
+
+        if(linea[0] == 'B' || linea[0] == 'K')  //Se trabaja directamente sobre las lineas que empiezan por B o K
+        {
+            procesarLineaPuerto(linea, puerto);
+        }
+    }
+
+    fclose(archivo);
+
+    return eventoFuturo;
+}
+
+int procesarLineaPuerto(char *linea, tPuerto *puerto)
+{
+    char *token;
+    char *codigo;
+    char *codigoContenedor;
+    char *valorT;
+    char *contenedores;
+    int tiempo;
+    int eventoFuturo = NO_HAY_EVENTO_FUTURO;
+
+    tMuelle *muelle = NULL;
+    tBuque *buque;
+    tCamion *camion;
+    tContenedor *contenedor = (tContenedor*)malloc(sizeof(tContenedor));
+    if (contenedor == NULL)
+        return ERROR_SIN_MEM;
+
+    token = strtok(linea, ";");     //Busco el primer campo B00X o K00X
+    if(token == NULL)
+        return eventoFuturo;
+
+    codigo = token;                 //Guardo el codigo
+
+    token = strtok(NULL, ";");      //Busco el segundo campo: T=X
+    if(token == NULL)
+        return eventoFuturo;
+
+    valorT = token + 2;             //Salteamos "T="
+    tiempo = atoi(valorT);
+
+    token = strtok(NULL, ";");      //Busco el tercer campo: C=C10X,C10X,C10X...
+    if(token == NULL)
+        return eventoFuturo;
+
+    contenedores = token + 2;       //Salteamos "C="
+
+    if(tiempo > puerto->tiempoAnterior)
+    {
+        if(tiempo <= puerto->tiempoActual)
+        {
+            if(codigo[0] == 'B')
+            {
+                buque = (tBuque*)malloc(sizeof(tBuque));
+                if (buque == NULL)
+                    return ERROR_SIN_MEM;
+
+                strcpy(buque->codigo, codigo);
+                crearCola(&buque->sigContenedor);
+
+                codigoContenedor = strtok(contenedores, ",");   //Saco el codigo del contenedor
+
+                while(codigoContenedor != NULL)
+                {
+                    strcpy(contenedor->codigo, codigoContenedor);        //Guardo en la estructura tContenedor
+
+                    ponerEnCola(&buque->sigContenedor, contenedor, sizeof(tContenedor));
+
+                    codigoContenedor = strtok(NULL, ",");
+                }
+
+                if(buscarEnLista(&puerto->listaMuelles, NULL, &muelle, muelleDisponible, devolverMuelle))    //Busco si hay muelle disponible
+                {
+                    atracarBuque(muelle, buque);        //Si hay, atraco
+                }
+                else
+                    ponerEnCola(&puerto->colaBuques, buque, sizeof(tBuque));    //Si no hay, a la cola de espera
+            }
+            else if(codigo[0] == 'K')
+            {
+                camion = (tCamion*)malloc(sizeof(tCamion));
+
+                strcpy(camion->codigo, codigo);
+
+                codigoContenedor = strtok(contenedores, ",");
+
+                if(codigoContenedor != NULL)
+                {
+                    strcpy(camion->contenedorBuscado.codigo, codigoContenedor);
+                }
+
+                ponerEnCola(&puerto->colaCamiones, camion, sizeof(tCamion));   //Guardo el camion en la cola
+            }
+        }
+        else
+            eventoFuturo = HAY_EVENTO_FUTURO;
+    }
+
+    return eventoFuturo;
+}
+
+int muelleDisponible(const void *muelleDato, const void *nulo)
+{
+    const tMuelle *muelle = (const tMuelle*)muelleDato;
+
+    return (muelle->disponible == 1);
+}
+
+void devolverMuelle(void *dato, void *destino)
+{
+    *(tMuelle **)destino = dato;
+}
+
+void atracarBuque(tMuelle *muelle, tBuque *buque)
+{
+    muelle->disponible = 0;
+    muelle->buqueAtracado = *buque;
+}

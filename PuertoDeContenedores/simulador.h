@@ -3,8 +3,6 @@
 
 #include "estructurasDeDatos.h"
 
-//typedef struct tPuerto tPuerto;
-
 //Estados de juego
 #define PANTALLA_INICIAL -1
 #define SALIR 0
@@ -15,8 +13,6 @@
 #define OPCION_NO_VALIDA 0
 
 #define LONG_VALOR_CONFIG 4
-#define ARCHIVO_NO_ENCONTRADO 789
-
 
 typedef struct
 {
@@ -34,12 +30,12 @@ typedef struct
 
 #include "puerto.h" //Este include es para que tome tConfiguracion en puerto (No mover)
 
-//typedef int (Cmp*)(const void*, const void*);    pensé en usarlo para cmpCodZona, pero por ahora no lo veo necesario
-
 //Pantallas de juego
 void pantallaInicial(int *estadoDeJuego);
 int ingresarNombreOperador(char *nombreDestino);
 void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nombreOp);
+void mostrarPantallaEstadisticas(void);
+void actualizarEstadisticasOperador(const char *nombreOp, int puntajeObtenido);
 
 //Funciones configuracion
 int obtenerValorConfiguracion(char *cadena, FILE *archivo);
@@ -49,14 +45,16 @@ void inicializarPuerto(tPuerto *puerto, tConfiguracion *configuracion);
 void inicializarMuelles(tLista *listaMuelles, int cantidad);
 void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas);
 
-//Juego
-void ejecutarJornada(tPuerto *puerto, const tConfiguracion *config, FILE *archEscenario);
+//Auxiliares para el juego
 tNodo* localizarZona(tLista *listaZonas, const char *codZona);
 int verificarZonas(const char *codzona, tLista *listaZonas);
 int procesarArribosDelMinuto(FILE *archEscenario, tPuerto *puerto);
 
+
 //Funciones auxiliares
 void stringMayuscula(char *str);
 int cmpCodZona(const void* c1, const void* c2);
+int cmpOperadorNombre(const void *e1, const void *e2);
+void mostrarOperador(const void *dato);
 
 #endif // SIMULADOR_H_INCLUDED
