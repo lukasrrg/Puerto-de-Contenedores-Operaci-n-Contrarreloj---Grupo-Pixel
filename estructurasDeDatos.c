@@ -302,32 +302,22 @@ int insertarEnOrden(tLista *pl, void *dato, unsigned tam, int (*cmp)(const void 
 
 int mostrarLista(const tLista *pl, void (*muestra)(const void *dato))
 {
-    if (*pl == NULL)
+    const tNodo *nodoActual = *pl;
+
+    if (nodoActual == NULL)
         return ERROR_LISTA_VACIA;
     else
         do
         {
-            muestra((*pl)->dato);
+            muestra(nodoActual->dato);
 
-            pl = &(*pl)->sig;
-        } while(*pl != NULL);
+            nodoActual = nodoActual->sig;
+        } while(nodoActual != NULL);
 
     return TODO_OK;
 }
 
-int buscarEnLista(const tLista *pl, const void *buscado, void *devolver, int (*cmp)(const void *elem1, const void *elem2), void (*accion)(void *dato, void *devolucion))
-{
-    while (*pl != NULL)
-    {
-        if (cmp((*pl)->dato, buscado) == HAY_OCURRENCIA)
-        {
-            accion((*pl)->dato, devolver);
-
-            return ELEM_ENCONTRADO;
-        }
-
-        pl = &(*pl)->sig;
-    }
-
-    return ELEM_NO_ENCONTRADO;
-}
+//int buscarEnLista(const void *dato, const void *lista, funcion de comparacion)
+//{
+//
+//}
