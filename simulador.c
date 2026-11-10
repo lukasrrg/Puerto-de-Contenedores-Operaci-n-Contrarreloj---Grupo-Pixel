@@ -74,7 +74,7 @@ void jornadaOperativa(tPuerto *puerto, tConfiguracion *configuracion, char *nomb
     int jornadaActiva = JORNADA_ACTIVA;
     int hayEventoFuturo = HAY_EVENTO_FUTURO;
 
-    while (jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
+    while(jornadaActiva && puerto->tiempoActual < configuracion->duracion_jornada_minutos)
     {
         //Actualizar buques y camiones para el T actual
         hayEventoFuturo = actualizarBuquesCamiones(puerto);
@@ -161,7 +161,6 @@ int obtenerValorConfiguracion(char *cadena, FILE *archivo)
     return valor;
 }
 
-
 int leerArchivoConfiguracion(tConfiguracion *configuracion)
 {
     FILE *archivo = fopen("config.txt", "rt");
@@ -206,7 +205,6 @@ int leerArchivoConfiguracion(tConfiguracion *configuracion)
     fclose(archivo);
     return TODO_OK;
 }
-
 
 void configuracionMostrar(tConfiguracion *config)
 {
@@ -267,18 +265,19 @@ void crearZonas(tLista *listaZonas, int cantidadZonas, int capacidadZonas)
 
         // Copia los bytes de nuevaZona dentro de la memoria del nodo de la lista
         insertarAlFinal(listaZonas, &nuevaZona, sizeof(tZona));
-    tZona *zona;
-    int i;
-    char buffer[4];
-    for (i=1;i<=cantidadZonas;i++)
-    {
-        crearPila(&(zona->pila));
-        zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
-        itoa(i, buffer, 10);
-        strcpy(zona->codigo,"Z");
-        strcat(zona->codigo,buffer);
+        tZona *zona;
+        int i;
+        char buffer[4];
+        for (i=1; i<=cantidadZonas; i++)
+        {
+            crearPila(&(zona->pila));
+            zona->capacidad=capacidadZonas; //creamos la pila para cada zona y le asignamos capacidad y codigo
+            itoa(i, buffer, 10);
+            strcpy(zona->codigo,"Z");
+            strcat(zona->codigo,buffer);
 
-        insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+            insertarAlFinal(listaZonas,zona,sizeof(zona)); //insertamos cada zona al final de la lista, ya que van a estar ordenadas por numero
+        }
     }
 }
 
@@ -307,7 +306,6 @@ tNodo* localizarZona(tLista *listaZonas, const char *codZona)
 
     return NULL; // Recorrió toda la lista y la zona no existe
 }
-
 
 int verificarZonas(const char *codzona, tLista *listaZonas)
 {

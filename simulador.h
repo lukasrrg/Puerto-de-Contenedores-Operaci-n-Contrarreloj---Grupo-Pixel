@@ -18,10 +18,6 @@
 
 #define LONG_VALOR_CONFIG 4
 
-
-
-
-
 typedef struct
 {
     int     cap_max_pila,
