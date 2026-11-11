@@ -107,34 +107,48 @@ void mostrarEstadoPuerto(const tPuerto *puerto)
 int entregarContenedor(tPuerto *puerto)
 {
     tCamion camion;
-    tNodo *listaZonas = puerto->listaZonas;
+    tNodo *nodoZonaActual = puerto->listaZonas;
     tZona *zonaActual;
     tContenedor contenedorActual;
 
+    // 1. Validar si hay camiones en la cola de espera
     if (colaVacia(&puerto->colaCamiones))
     {
         return CONTENEDOR_NO_ENCONTRADO;
     }
 
+    // 2. Inspeccionar el frente de la cola de camiones sin desencolarlo
     verPrimero(&puerto->colaCamiones, &camion, sizeof(tCamion));
 
-    while(listaZonas != NULL)
+    // 3. Recorrer la lista dinamica de zonas para buscar el contenedor solicitado
+    while (nodoZonaActual != NULL)
     {
-        zonaActual = (tZona*)listaZonas->dato;
+        zonaActual = (tZona *)nodoZonaActual->dato;
+
+        // Validar que la pila de la zona actual no este vacia
         if (!pilaVacia(&zonaActual->pila))
         {
+            // Consultar el tope de la pila de contenedores de la zona
             if (verTope(&zonaActual->pila, &contenedorActual, sizeof(tContenedor)) == TODO_OK)
             {
-                if(strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0) // Ver si luego se cambia a cami�n.s�loC�digoBuscado
+                // Verificar si el contenedor en el tope coincide con el buscado por el camion
+                if (strcmp(contenedorActual.codigo, camion.contenedorBuscado.codigo) == 0)
                 {
+                    // Si coincide: Desapilar de la zona y desencolar el camion
                     sacarDePila(&zonaActual->pila, &contenedorActual, sizeof(tContenedor));
                     sacarDeCola(&puerto->colaCamiones, &camion, sizeof(tCamion));
+
+                    // Sumar bonificacion y contabilizar operacion si aplica en tu struct
+                    puerto->puntuacionProvisoria += 10;
+                    puerto->operacionesRealizadas++;
+
                     return TODO_OK;
                 }
             }
         }
-        listaZonas = listaZonas->sig;
+        nodoZonaActual = nodoZonaActual->sig;
     }
+
     return CONTENEDOR_NO_ENCONTRADO;
 }
 
@@ -229,39 +243,50 @@ int descargar(tPuerto *puerto, const tConfiguracion *config, const char *codMuel
 //REU
 int reubicar(tLista *listaZonas, const char *codZonaOrigen, const char *codZonaDestino)
 {
+    // 1. Localizar los nodos de ambas zonas en la lista dinamica
     tNodo *nodoRetirar = localizarZona(listaZonas, codZonaOrigen);
     tNodo *nodoInsertar = localizarZona(listaZonas, codZonaDestino);
 
+    // 2. Validar existencia de ambos nodos ANTES de desreferenciarlos (evita Segmentation Fault)
+    if (nodoRetirar == NULL || nodoInsertar == NULL)
+    {
+        printf("\n[ERROR] Una o ambas zonas (%s, %s) no existen.\n", codZonaOrigen, codZonaDestino);
+        return OPCION_NO_VALIDA;
+    }
+
+    // 3. Castear de forma segura el puntero void* dato a (tZona *)
     tZona *zRetirar = (tZona *)nodoRetirar->dato;
     tZona *zInsertar = (tZona *)nodoInsertar->dato;
 
-    tContenedor container;
-
-    if (nodoRetirar == NULL || nodoInsertar == NULL)
-    {
-        printf("\n[ERROR] Una o ambas zonas no existen.\n");
-        return OPCION_NO_VALIDA;
-    }
-
+    // 4. Validar que la zona de origen no este vacia
     if (pilaVacia(&zRetirar->pila))
     {
-        printf("\n[ERROR] La zona de origen %s esta vacia.\n", codZonaOrigen);
+        printf("\n[ERROR] La zona de origen %s esta vacia. No hay contenedores para reubicar.\n", codZonaOrigen);
         return OPCION_NO_VALIDA;
     }
 
+    // 5. Validar que la zona de destino no este llena
     if (pilaLlena(&zInsertar->pila, sizeof(tContenedor)))
     {
         printf("\n[ERROR] La zona de destino %s esta llena.\n", codZonaDestino);
         return OPCION_NO_VALIDA;
     }
 
+    // 6. Transferencia segura usando el TDA Pila
+    tContenedor container;
+    memset(&container, 0, sizeof(tContenedor));
+
     if (sacarDePila(&zRetirar->pila, &container, sizeof(tContenedor)) == TODO_OK)
     {
         ponerEnPila(&zInsertar->pila, &container, sizeof(tContenedor));
+
+        // Actualizar capacidades relativas si las utilizas en tu struct tZona
         zRetirar->capacidad++;
         zInsertar->capacidad--;
+
         return TODO_OK;
     }
+
     return OPCION_NO_VALIDA;
 }
 

@@ -559,7 +559,7 @@ void finalizarJornada(tPuerto *puerto, tArbol *arbolEstadisticas, const char *no
     int camionesSinAtender = 0;
     tCola aux = puerto->colaCamiones;
 
-    // Recorremos los nodos de la cola sin liberar memoria todavía
+    // Recorremos los nodos de la cola auxiliar sin destruir la original todavía
     tNodo *nodoCam = aux.pri;
     while (nodoCam != NULL)
     {
@@ -604,9 +604,36 @@ void finalizarJornada(tPuerto *puerto, tArbol *arbolEstadisticas, const char *no
     fflush(stdin);
     getchar();
 
-    // 4. LIBERACIÓN SEGURA DE MEMORIA DINÁMICA (Al final de todo)
+    // 4. LIBERACIÓN SEGURA DE MEMORIA DINÁMICA
+    // A. Vaciar pilas de contenedores dentro de cada zona y luego la lista de zonas
+    tNodo *nodoZona = puerto->listaZonas;
+    while (nodoZona != NULL)
+    {
+        tZona *z = (tZona *)nodoZona->dato;
+        vaciarPila(&z->pila);
+        nodoZona = nodoZona->sig;
+    }
     vaciarLista(&puerto->listaZonas);
+
+    // B. Vaciar las colas internas de contenedores dentro de cada buque atracado en los muelles
+    for (int i = 0; i < puerto->cantMuelles; i++)
+    {
+        if (puerto->muelles[i].disponible == 0)
+        {
+            vaciarCola(&puerto->muelles[i].buqueAtracado.sigContenedor);
+        }
+    }
+
+    // C. Vaciar las colas de contenedores dentro de los buques que quedaron en espera y luego la cola de buques
+    while (!colaVacia(&puerto->colaBuques))
+    {
+        tBuque b;
+        sacarDeCola(&puerto->colaBuques, &b, sizeof(tBuque));
+        vaciarCola(&b.sigContenedor);
+    }
     vaciarCola(&puerto->colaBuques);
+
+    // D. Vaciar cola de camiones
     vaciarCola(&puerto->colaCamiones);
 }
 

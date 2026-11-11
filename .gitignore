@@ -1,23 +1,24 @@
-# Archivos generados por Code::Blocks
+# Archivos de proyecto e IDE (Se conserva .cbp para el grupo)
+*.layout
+*.depend
+*.user
+
+# Carpetas de compilación de Code::Blocks
 bin/
 obj/
+.objs/
 
-# Archivos de compilación
+# Archivos de compilación y ejecutables
 *.o
 *.a
 *.so
 *.dll
 *.exe
 
-# Archivos temporales
+# Archivos temporales y de datos locales
 *.tmp
 *.temp
 *.bak
-
-# Archivos del IDE
-*.depend
-*.layout
-
-# Sistema operativo
+*.dat
 Thumbs.db
 Desktop.ini
